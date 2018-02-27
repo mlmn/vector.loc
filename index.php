@@ -1,10 +1,8 @@
-<?php
+﻿<?php
 
-//Debug class
 class Dbg {
-	
-	//cool dump
 	public static function cd($var) {
+		//echo "<meta charset=utf-8>";
 		echo "<pre>";
 		echo "\n";
 		var_dump($var);
@@ -13,15 +11,15 @@ class Dbg {
 }
 
 class Reporter {
-	//ну а почему бы и нет, когда можно сделать красиво)
+	
 	static public function pageHeader() {
-		echo '<!DOCTYPE html><html lang="en"><head><title>Bootstrap Example</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script></head><body>';
+		echo '<!DOCTYPE html><html lang="en"><head><title>Bootstrap Example</title> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script></head><body>';
 	}
 	static public function pageFooter() {
 		echo '</body></html>';
 	}
 
-	static public function browserReport(Organisation $org) {
+	static public function reportBody(Organisation $org) {
 		echo '<div class="container">';
 		echo '<table class="table"><thead>';
 		echo "<tr>";
@@ -62,7 +60,14 @@ class Reporter {
 
 	}
 
-	static public function ideoneReport(Organisation $org) {
+	static public function browserReport(Organisation $org) {
+		self::pageHeader();
+		self::reportBody($org);
+		self::pageFooter();
+	}
+
+	static public function simpleReport(Organisation $org) {
+		//echo "<meta charset=utf-8>";
 		echo "<pre>";
 		echo "Департамент      сотр.        тугр.           кофе          стр.         тугр/стр.\n";
 		foreach ($org->getDepartments() as $dep) {
@@ -445,12 +450,12 @@ $dep4->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
 // }
 
 //разкоментить это если запускать на локалке
-// Reporter::pageHeader();
-// Reporter::browserReport($org);
-// Reporter::pageFooter();
 
-Dbg::cd(Crisys::prepareDismissal($org));
+Reporter::browserReport($org);
 
 
+//Dbg::cd(Crisys::prepareDismissal($org));
 
-//Reporter::ideoneReport($org);
+
+
+//Reporter::simpleReport($org);
