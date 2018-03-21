@@ -1,11 +1,13 @@
 ﻿<?php
+# Задача про компанию «Вектор»
+# http://archive-ipq-co.narod.ru/l1/pasta.html
 
 class Dbg {
-	public static function cd($var) {
+	static public function cd($var) {
 		//echo "<meta charset=utf-8>";
 		echo "<pre>";
 		echo "\n";
-		var_dump($var);
+		print_r($var);
 		exit;
 	}
 }
@@ -53,8 +55,6 @@ class Reporter {
 		echo "<td>" . $totals->totalPapers . "</td>";
 		echo "<td>" . $totals->totalCost . "</td>";		
 		echo "</tr>";
-
-
 
 		echo "</tbody></table></div>";
 
@@ -396,47 +396,94 @@ class Crisys {
 	}
 }
 
+class OrganisationBuilder {
+	public $org;
+	public $dep;
 
-//как более элегантно забить работягами я просто не знаю:
-$org = new Organisation('Вектор');
+	public function createDefaultVector() {
+		$this->org = new Organisation('Вектор');
 
-// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
-$dep1 = new Department('Закупок');
-$org->addDepartment($dep1);
-$dep1->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
-$dep1->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
-$dep1->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
-$dep1->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
-$dep1->addEmployees(PeopleFactory::create('Manager', 2, true, 1));
+		// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
+		$this->dep = new Department('Закупок');
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
+		$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
+		$this->org->addDepartment($this->dep);
+		
 
-// Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
-$dep2 = new Department('Продаж');
-$org->addDepartment($dep2);
-$dep2->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
-$dep2->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
-$dep2->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
-$dep2->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
-$dep2->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
+		// Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
+		$this->dep = new Department('Продаж');		
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
+		$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
+		$this->dep->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
+		$this->dep->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
+		$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
+		$this->org->addDepartment($this->dep);
 
-// Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
-$dep3 = new Department('Рекламы');
-$org->addDepartment($dep3);
-$dep3->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
-$dep3->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
-$dep3->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
-$dep3->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
-$dep3->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
+		// Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
+		$this->dep = new Department('Рекламы');		
+		$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
+		$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
+		$this->dep->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
+		$this->dep->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
+		$this->org->addDepartment($this->dep);
 
-// Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
-$dep4 = new Department('Логистики');
-$org->addDepartment($dep4);
-$dep4->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
-$dep4->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
-$dep4->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
-$dep4->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
+		// Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
+		$this->dep = new Department('Логистики');		
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
+		$this->dep->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
+		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
+		$this->org->addDepartment($this->dep);
+
+		return $this->org;
+	}
 
 
-//Dbg::cd($org);
+}
+
+// $org = new Organisation('Вектор');
+
+// // Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
+// $dep1 = new Department('Закупок');
+// $org->addDepartment($dep1);
+// $dep1->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
+// $dep1->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
+// $dep1->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
+// $dep1->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
+// $dep1->addEmployees(PeopleFactory::create('Manager', 2, true, 1));
+
+// // Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
+// $dep2 = new Department('Продаж');
+// $org->addDepartment($dep2);
+// $dep2->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
+// $dep2->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
+// $dep2->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
+// $dep2->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
+// $dep2->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
+
+// // Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
+// $dep3 = new Department('Рекламы');
+// $org->addDepartment($dep3);
+// $dep3->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
+// $dep3->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
+// $dep3->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
+// $dep3->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
+// $dep3->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
+
+// // Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
+// $dep4 = new Department('Логистики');
+// $org->addDepartment($dep4);
+// $dep4->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
+// $dep4->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
+// $dep4->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
+// $dep4->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
+
+
+
 
 // $testDep = new Department('Тестовый');
 // $testDep->addEmployees(PeopleFactory::create('Manager', 1, false, 2));
@@ -450,7 +497,9 @@ $dep4->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
 // }
 
 //разкоментить это если запускать на локалке
-
+$builder = new OrganisationBuilder();
+$org = $builder->createDefaultVector();
+//Dbg::cd($org);
 Reporter::browserReport($org);
 
 
