@@ -1,7 +1,11 @@
 ﻿<?php
 # Задача про компанию «Вектор»
 # http://archive-ipq-co.narod.ru/l1/pasta.html
+mb_internal_encoding('utf-8');
 
+//echo mb_internal_encoding();
+//
+echo "<pre>";
 class Dbg {
 	static public function cd($var) {
 		//echo "<meta charset=utf-8>";
@@ -190,8 +194,27 @@ class Department {
 		}
 	}
 
+	public function fireStuffByName($fireList) {
+		foreach($this->getEmployees() as $number => $employee) {
+			if (in_array($employee->getName(), $fireList)) {
+				//var_dump($this->employees);
+				unset($this->employees[$number]);
+			}
+		} 
+	}
+
 	public function getEmployees() {
 		return $this->employees;
+	}
+
+	public function getAllEngineers() {
+		$engineersList = [];
+		foreach ($this->getEmployees() as $employee) {
+			if (get_class($employee) == 'Engineer') {
+				$engineersList[] = $employee;
+			}
+		}
+		return $engineersList;
 	}
 
 	public function countDepEmployees() {
@@ -230,14 +253,16 @@ class Department {
 		}
 	}
 
+
+
 }
 
 class Names {
 	public static function generateFullName() {
-		$fLength = mt_rand(2, 6);
+		$fLength = mt_rand(2, 5);
 		$firstName = self::generateName($fLength);
 
-		$sLength = mt_rand(2, 6);
+		$sLength = mt_rand(2, 5);
 		$secondName = self::generateName($sLength);
 
 		return $firstName . " " . $secondName;
@@ -249,7 +274,10 @@ class Names {
 			'на', 'ни','ну', 'но', 'не',
 			'ка', 'ки', 'ку', 'ко','ке',
 			'та', 'ти', 'ту', 'то', 'те',
-			'са', 'си', 'су', 'со', 'се',	
+			'са', 'си', 'су', 'со', 'се',
+			'ма', 'ми', 'му', 'мо', 'ме',
+			'ра', 'ри', 'ру', 'ро', 'ре',
+			'ха', 'хи', 'ху', 'хо', 'хе',
 		];
 		$name = '';
 
@@ -332,6 +360,17 @@ abstract class Employee {
 		return $papers;
 	}
 
+	public function getRang() {
+		return $this->rang;
+	}
+
+	public function isLeader() {
+		return $this->leader;
+	}
+
+	public function getName() {
+		return $this->name;
+	}
 }
 
 
@@ -370,8 +409,7 @@ class Analyst extends Employee {
 }
 
 class PeopleFactory {
-	public static function create($class, $rang, $leader, $amount) {
-		
+	public static function create($class, $rang, $leader, $amount) {		
 		if (get_parent_class($class) == 'Employee') {
 			$people = [];
 			for ($i = 0; $i < $amount; $i++) {
@@ -379,20 +417,6 @@ class PeopleFactory {
 			}
 			return $people;
 		}
-	}
-}
-
-class Crisys {
-	public static function prepareDismissal(Organisation $org) {
-		$dismissalList = new SplObjectStorage;
-		foreach ($org->getDepartments() as $dep) {
-			$depList = new StdClass;
-			$depList->depName = $dep->getName();
-			$depList->dismissalNames = [];
-			$dismissalList->attach($depList);
-		}
-
-		return $dismissalList;
 	}
 }
 
@@ -445,66 +469,68 @@ class OrganisationBuilder {
 
 }
 
-// $org = new Organisation('Вектор');
+class AntiCrisys {
 
-// // Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
-// $dep1 = new Department('Закупок');
-// $org->addDepartment($dep1);
-// $dep1->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
-// $dep1->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
-// $dep1->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
-// $dep1->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
-// $dep1->addEmployees(PeopleFactory::create('Manager', 2, true, 1));
+	private $organisation;
 
-// // Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
-// $dep2 = new Department('Продаж');
-// $org->addDepartment($dep2);
-// $dep2->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
-// $dep2->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
-// $dep2->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
-// $dep2->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
-// $dep2->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
-
-// // Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
-// $dep3 = new Department('Рекламы');
-// $org->addDepartment($dep3);
-// $dep3->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
-// $dep3->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
-// $dep3->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
-// $dep3->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
-// $dep3->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
-
-// // Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
-// $dep4 = new Department('Логистики');
-// $org->addDepartment($dep4);
-// $dep4->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
-// $dep4->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
-// $dep4->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
-// $dep4->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
+	public function __construct(Organisation $organisation) {
+		$this->organisation = $organisation;
+	}
 
 
+	public function prepareFireListOfEngineersInDepartment(Department $dep) {
+		$engineersList = $dep->getAllEngineers();
+	
+		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
+		//var_dump($needToFire);
+		$fireList = [];
+		$rangAvailableToFire = 1;
+		$startFire = true;
+		
+		while ($startFire == true and $needToFire > 0) {
+			foreach($engineersList as $engineer) {
+				
+				$countFireList = count($fireList);
+				//var_dump($countFireList);
+				if ($needToFire <= $countFireList) {
+					$startFire = false;
+					break(2);
+				}
+				if ((!$engineer->isLeader()) and ($engineer->getRang() <= $rangAvailableToFire)) {
+					$fireList[] = $engineer->getName();
+
+				}
+			}
+			$rangAvailableToFire++;
+			//break;
+		}
+
+		return $fireList;
+	}
+
+	public function fireEngineers() {
+		$departments = $this->organisation->getDepartments();
+		foreach($departments as $dep) {
+			$fireList = $this->prepareFireListOfEngineersInDepartment($dep);
+			//var_dump($fireList);
+			$dep->fireStuffByName($fireList);
+		}
+	}
 
 
-// $testDep = new Department('Тестовый');
-// $testDep->addEmployees(PeopleFactory::create('Manager', 1, false, 2));
-// $salary = $testDep->countDepSalary();
+}
 
-// echo $salary;
-// //Dbg::cd($testDep);
-// foreach ($testDep->getEmployees() as $emp) {
-// 	//echo $emp->getSalary();
-// 	Dbg::cd($emp);
-// }
-
-//разкоментить это если запускать на локалке
+//echo "<pre>";
 $builder = new OrganisationBuilder();
 $org = $builder->createDefaultVector();
-//Dbg::cd($org);
 Reporter::browserReport($org);
 
+$anti = new AntiCrisys($org);
+$anti->fireEngineers();
+Reporter::browserReport($org);
+//Dbg::cd($deps);
 
-//Dbg::cd(Crisys::prepareDismissal($org));
 
+//Dbg::cd($org);
+//Reporter::browserReport($org);
 
-
-//Reporter::simpleReport($org);
