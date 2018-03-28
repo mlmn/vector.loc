@@ -2,10 +2,8 @@
 # Задача про компанию «Вектор»
 # http://archive-ipq-co.narod.ru/l1/pasta.html
 mb_internal_encoding('utf-8');
-
-//echo mb_internal_encoding();
-//
 echo "<pre>";
+
 class Dbg {
 	static public function cd($var) {
 		//echo "<meta charset=utf-8>";
@@ -108,8 +106,7 @@ class Organisation {
 		$this->name = $name;		
 	}
 
-	public function addDepartment(Department $dep) {
- 
+	public function addDepartment(Department $dep) { 
 		if (!in_array($dep, $this->departments, true)) {
 			$this->departments[] = $dep;
 		}
@@ -157,10 +154,7 @@ class Organisation {
 			$info->avgCoffe = ($info->totalCoffe / $depsCount);
 			$info->avgPapers = ($info->totalPapers / $depsCount);
 			$info->avgCost = ($info->totalCost / $depsCount);
-
 		}
-
-
 		return $info;
 	}
 
@@ -200,8 +194,9 @@ class Department {
 				//var_dump($this->employees);
 				unset($this->employees[$number]);
 			}
-		} 
+		}
 	}
+
 
 	public function getEmployees() {
 		return $this->employees;
@@ -216,6 +211,53 @@ class Department {
 		}
 		return $engineersList;
 	}
+
+	public function getTopAnalyst() {
+		$topAnalyst = null;
+		$topRang = 0;
+		foreach ($this->getEmployees() as $employee) {
+			if(get_class($employee) == 'Analyst') {
+				$rang = $employee->getRang();
+				if ($rang > $topRang) {
+					$topRang = $rang;
+					$topAnalyst = $employee;
+				}
+			}
+		}
+		return $topAnalyst;
+	}
+
+	public function getLeader() {
+		foreach ($this->getEmployees() as $employee) {
+			if ($employee->isLeader()) {
+				return $employee;
+			}
+		}
+	}
+	public function makeLeaderByName($name) {
+		foreach ($this->getEmployees() as $employee) {
+			if ($employee->getName() == $name) {
+				$employee->setLeader(true);
+			}
+		}
+	}
+	public function demoteLeader() {
+		foreach($this->getEmployees() as $employee) {
+			//var_dump($employee->isLeader());
+			if ($employee->isLeader() == true) {
+				$employee->setLeader(false);
+			}
+		}
+	}
+
+	public function promoteLeaderByName($name) {
+		foreach($this->getEmployees() as $employee) {
+			if ($employee->getName() == $name) {
+				$employee->setLeader(true);
+			}
+		}
+	}
+
 
 	public function countDepEmployees() {
 		return count($this->getEmployees());
@@ -259,10 +301,10 @@ class Department {
 
 class Names {
 	public static function generateFullName() {
-		$fLength = mt_rand(2, 5);
+		$fLength = mt_rand(2, 4);
 		$firstName = self::generateName($fLength);
 
-		$sLength = mt_rand(2, 5);
+		$sLength = mt_rand(2, 4);
 		$secondName = self::generateName($sLength);
 
 		return $firstName . " " . $secondName;
@@ -316,6 +358,10 @@ abstract class Employee {
 
 	public function setBasePapers($papers) {
 		$this->basePapers = $papers;
+	}
+
+	public function setLeader($leader) {
+		$this->leader = $leader;
 	}
 
 	public function getSalary() {
@@ -434,8 +480,7 @@ class OrganisationBuilder {
 		$this->dep->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
 		$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
 		$this->dep->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
-		$this->org->addDepartment($this->dep);
-		
+		$this->org->addDepartment($this->dep);		
 
 		// Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
 		$this->dep = new Department('Продаж');		
@@ -465,55 +510,77 @@ class OrganisationBuilder {
 
 		return $this->org;
 	}
-
-
 }
 
 class AntiCrisys {
-
 	private $organisation;
 
 	public function __construct(Organisation $organisation) {
 		$this->organisation = $organisation;
 	}
 
-
-	public function prepareFireListOfEngineersInDepartment(Department $dep) {
+	private function prepareFireListOfEngineersInDepartment(Department $dep) {
 		$engineersList = $dep->getAllEngineers();
-	
 		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
-		//var_dump($needToFire);
 		$fireList = [];
 		$rangAvailableToFire = 1;
-		$startFire = true;
-		
+		$startFire = true;		
 		while ($startFire == true and $needToFire > 0) {
-			foreach($engineersList as $engineer) {
-				
+			foreach($engineersList as $engineer) {				
 				$countFireList = count($fireList);
-				//var_dump($countFireList);
 				if ($needToFire <= $countFireList) {
 					$startFire = false;
 					break(2);
 				}
 				if ((!$engineer->isLeader()) and ($engineer->getRang() <= $rangAvailableToFire)) {
 					$fireList[] = $engineer->getName();
-
 				}
 			}
 			$rangAvailableToFire++;
-			//break;
 		}
-
 		return $fireList;
 	}
 
-	public function fireEngineers() {
+	public function firstMethod() { //fireEngineers
 		$departments = $this->organisation->getDepartments();
 		foreach($departments as $dep) {
 			$fireList = $this->prepareFireListOfEngineersInDepartment($dep);
 			//var_dump($fireList);
 			$dep->fireStuffByName($fireList);
+		}
+	}
+
+	public function boostAnalystsInDepartment(Department $dep) {
+		$employees = $dep->getEmployees();
+		foreach($employees as $employee) {
+			if (get_class($employee) == 'Analyst') {
+				$employee->setBaseSalary(1100);
+				$employee->setBaseCoffe(75);
+			}
+		}
+	}
+
+	public function makeAnalystLeaderInDepartment(Department $dep) {
+
+		$leader = $dep->getLeader();
+		$topAnalyst = $dep->getTopAnalyst();
+		//var_dump($topAnalyst);
+		if (get_class($leader) != 'Analyst' and $topAnalyst != null) {
+			$dep->demoteLeader();
+			$dep->promoteLeaderByName($topAnalyst->getName());
+		}
+
+
+
+	}
+
+
+	public function secondMethod() { //boostAnalysts
+		$departments = $this->organisation->getDepartments();
+
+		foreach($departments as $dep) {
+			$this->boostAnalystsInDepartment($dep);
+			$this->makeAnalystLeaderInDepartment($dep);
 		}
 	}
 
@@ -524,9 +591,10 @@ class AntiCrisys {
 $builder = new OrganisationBuilder();
 $org = $builder->createDefaultVector();
 Reporter::browserReport($org);
-
+//var_dump($org);
 $anti = new AntiCrisys($org);
-$anti->fireEngineers();
+$anti->secondMethod();
+//var_dump($org);
 Reporter::browserReport($org);
 //Dbg::cd($deps);
 
