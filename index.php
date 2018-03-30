@@ -27,12 +27,13 @@ class Reporter {
 		echo '<div class="container">';
 		echo '<table class="table"><thead>';
 		echo "<tr>";
-		echo "<th>Департамент</th> <th>сотр.</th> <th>тугр.</th> <th>кофе</th> <th>стр.</th> <th>тугр/стр</th>";
+		echo "<th>Департамент</th> <th>сотр.</th> <th>ср. ранг</th> <th>тугр.</th> <th>кофе</th> <th>стр.</th> <th>тугр/стр</th>";
 		echo "</tr></thead><tbody>";
 		foreach ($org->getDepartments() as $dep) {
 			echo "<tr>";
 			echo "<td>". $dep->getName() . "</td>";
 			echo "<td>". $dep->countDepEmployees() . "</td>";
+			echo "<td>". $dep->countAveregeEmployeeRang() . "</td>";
 			echo "<td>". $dep->countDepSalary() . "</td>";
 			echo "<td>". $dep->countDepCoffe() . "</td>";
 			echo "<td>". $dep->countDepPapers() . "</td>";
@@ -44,6 +45,8 @@ class Reporter {
 		
 		echo "<tr><td>Средне</td>";
 		echo "<td>" . $totals->avgPeople . "</td>";
+		echo "<td>" . '..' . "</td>";
+
 		echo "<td>" . $totals->avgSalary . "</td>";
 		echo "<td>" . $totals->avgCoffe . "</td>";
 		echo "<td>" . $totals->avgPapers . "</td>";
@@ -52,6 +55,8 @@ class Reporter {
 
 		echo "<tr><td>Всего</td>";
 		echo "<td>" . $totals->totalPeople . "</td>";
+		echo "<td>" . '..' . "</td>";
+
 		echo "<td>" . $totals->totalSalary . "</td>";
 		echo "<td>" . $totals->totalCoffe . "</td>";
 		echo "<td>" . $totals->totalPapers . "</td>";
@@ -126,6 +131,9 @@ class Organisation {
 		$info->totalPeople = 0;
 		$info->avgPeople = 0;
 
+		$info->totalRang = 0;
+		$info->avgRang = 0;
+
 		$info->totalSalary = 0;
 		$info->avgSalary = 0;
 
@@ -140,6 +148,7 @@ class Organisation {
 
 		foreach($this->getDepartments() as $dep) {
 			$info->totalPeople += $dep->countDepEmployees();
+			$info->totalRang += $dep->countAveregeEmployeeRang();
 			$info->totalSalary += $dep->countDepSalary();
 			$info->totalCoffe += $dep->countDepCoffe();
 			$info->totalPapers += $dep->countDepPapers();
@@ -150,6 +159,7 @@ class Organisation {
 
 		if ($depsCount > 0) {
 			$info->avgPeople = ($info->totalPeople / $depsCount);
+			$info->avgRang = ($info->totalRang / $depsCount);
 			$info->avgSalary = ($info->totalSalary / $depsCount);
 			$info->avgCoffe = ($info->totalCoffe / $depsCount);
 			$info->avgPapers = ($info->totalPapers / $depsCount);
@@ -188,11 +198,18 @@ class Department {
 		}
 	}
 
-	public function fireStuffByName($fireList) {
+	public function fireStuffByName(array $fireList) {
 		foreach($this->getEmployees() as $number => $employee) {
 			if (in_array($employee->getName(), $fireList)) {
 				//var_dump($this->employees);
 				unset($this->employees[$number]);
+			}
+		}
+	}
+	public function promoteStuffByName(array $promotionList) {
+		foreach($this->getEmployees() as $number => $employee) {
+			if (in_array($employee->getName(), $promotionList)) {
+				$employee->upRang();
 			}
 		}
 	}
@@ -202,10 +219,14 @@ class Department {
 		return $this->employees;
 	}
 
-	public function getAllEngineers() {
+	public function getAllCertainSpecialists($specialist) { //put string typehint on php version 7.0+, currently on 5.6
+		if (get_parent_class($specialist) != 'Employee') {
+			return false;
+		}
+
 		$engineersList = [];
 		foreach ($this->getEmployees() as $employee) {
-			if (get_class($employee) == 'Engineer') {
+			if (get_class($employee) == $specialist) {
 				$engineersList[] = $employee;
 			}
 		}
@@ -291,10 +312,20 @@ class Department {
 		if ($this->countDepPapers() == 0) {
 			return 0;
 		} else {
-			return ($this->countDepSalary() / $this->countDepPapers());
+			$pageCost = $this->countDepSalary() / $this->countDepPapers();
+			
+			return round($pageCost, 3);
 		}
 	}
 
+	public function countAveregeEmployeeRang() {
+		$avgRang = 0;
+		foreach ($this->getEmployees() as $employee) {
+			$avgRang += $employee->getRang();
+		}
+		$avgRang /= count($this->getEmployees());
+		return round($avgRang, 3);
+	}
 
 
 }
@@ -362,6 +393,10 @@ abstract class Employee {
 
 	public function setLeader($leader) {
 		$this->leader = $leader;
+	}
+
+	public function upRang() {
+		$this->rang++;
 	}
 
 	public function getSalary() {
@@ -512,15 +547,17 @@ class OrganisationBuilder {
 	}
 }
 
-class AntiCrisys {
+class AntiCrisis {
 	private $organisation;
+	private $departments;
 
 	public function __construct(Organisation $organisation) {
 		$this->organisation = $organisation;
+		$this->departments = $this->organisation->getDepartments();
 	}
 
 	private function prepareFireListOfEngineersInDepartment(Department $dep) {
-		$engineersList = $dep->getAllEngineers();
+		$engineersList = $dep->getAllCertainSpecialists('Engineer');
 		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
 		$fireList = [];
 		$rangAvailableToFire = 1;
@@ -541,16 +578,14 @@ class AntiCrisys {
 		return $fireList;
 	}
 
-	public function firstMethod() { //fireEngineers
-		$departments = $this->organisation->getDepartments();
-		foreach($departments as $dep) {
+	public function firstAntiCrisisMethod() { //fireEngineers
+		foreach($this->departments as $dep) {
 			$fireList = $this->prepareFireListOfEngineersInDepartment($dep);
-			//var_dump($fireList);
 			$dep->fireStuffByName($fireList);
 		}
 	}
 
-	public function boostAnalystsInDepartment(Department $dep) {
+	private function boostAnalystsInDepartment(Department $dep) {
 		$employees = $dep->getEmployees();
 		foreach($employees as $employee) {
 			if (get_class($employee) == 'Analyst') {
@@ -560,45 +595,62 @@ class AntiCrisys {
 		}
 	}
 
-	public function makeAnalystLeaderInDepartment(Department $dep) {
-
+	private function makeAnalystLeaderInDepartment(Department $dep) {
 		$leader = $dep->getLeader();
 		$topAnalyst = $dep->getTopAnalyst();
-		//var_dump($topAnalyst);
 		if (get_class($leader) != 'Analyst' and $topAnalyst != null) {
 			$dep->demoteLeader();
 			$dep->promoteLeaderByName($topAnalyst->getName());
 		}
-
-
-
 	}
 
-
-	public function secondMethod() { //boostAnalysts
-		$departments = $this->organisation->getDepartments();
-
-		foreach($departments as $dep) {
+	public function secondAntiCrisisMethod() { //boostAnalysts
+		foreach($this->departments as $dep) {
 			$this->boostAnalystsInDepartment($dep);
 			$this->makeAnalystLeaderInDepartment($dep);
 		}
 	}
 
+	public function preparePromoteListOfManagersInDepartment(Department $dep, array $rangs) {
+			$managersList = $dep->getAllCertainSpecialists('Manager');
+			$totalAvailableToPromote = 0;
+			$managersOfSertainRangs = [];
+			foreach ($managersList as $manager) {
+				$currentRang = $manager->getRang();
+				if (in_array($currentRang, $rangs)) {
+					$totalAvailableToPromote++;
+					$managersOfSertainRangs[$currentRang][] = $manager;
+				}
+			}
+			$promotionList = [];
+			foreach ($managersOfSertainRangs as $currentRangManagers) {
+				$thisRangToPromote = count($currentRangManagers);
+				$neededToPromote = ceil(0.5 * ($thisRangToPromote));
+
+				for ($i = 0; $i < $neededToPromote; $i++) {
+					$promotionList[] = $currentRangManagers[$i]->getName();
+				}
+			}
+			return $promotionList;
+
+
+	}
+
+	public function thirdAntiCrisisMethod() { //promote 50% of department managers
+		$rangsToPromote = array(1, 2);
+		foreach ($this->departments as $dep) {
+			$promotionList = $this->preparePromoteListOfManagersInDepartment($dep, $rangsToPromote);
+			$dep->promoteStuffByName($promotionList);
+
+		}
+	}
 
 }
 
-//echo "<pre>";
 $builder = new OrganisationBuilder();
 $org = $builder->createDefaultVector();
 Reporter::browserReport($org);
-//var_dump($org);
-$anti = new AntiCrisys($org);
-$anti->secondMethod();
-//var_dump($org);
+
+$anti = new AntiCrisis($org);
+$anti->thirdAntiCrisisMethod();
 Reporter::browserReport($org);
-//Dbg::cd($deps);
-
-
-//Dbg::cd($org);
-//Reporter::browserReport($org);
-
