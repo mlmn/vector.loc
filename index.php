@@ -2,11 +2,9 @@
 # Задача про компанию «Вектор»
 # http://archive-ipq-co.narod.ru/l1/pasta.html
 mb_internal_encoding('utf-8');
-echo "<pre>";
 
 class Dbg {
 	static public function cd($var) {
-		//echo "<meta charset=utf-8>";
 		echo "<pre>";
 		echo "\n";
 		print_r($var);
@@ -16,104 +14,58 @@ class Dbg {
 
 class Reporter {
 	
-	static public function pageHeader() {
-		echo '<!DOCTYPE html><html lang="en"><head><title>Vector report</title> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script></head><body>';
+	public function __construct() {
+		include 'views/header.php';
 	}
-	static public function pageFooter() {
-		echo '</body></html>';
-	}
-
-	static public function reportBody(Organisation $org) {
-		echo '<div class="container">';
-		echo '<table class="table"><thead>';
-		echo "<tr>";
-		echo "<th>Департамент</th> <th>сотр.</th> <th>ср. ранг</th> <th>тугр.</th> <th>кофе</th> <th>стр.</th> <th>тугр/стр</th>";
-		echo "</tr></thead><tbody>";
-		foreach ($org->getDepartments() as $dep) {
-			echo "<tr>";
-			echo "<td>". $dep->getName() . "</td>";
-			echo "<td>". $dep->countDepEmployees() . "</td>";
-			echo "<td>". $dep->countAveregeEmployeeRang() . "</td>";
-			echo "<td>". $dep->countDepSalary() . "</td>";
-			echo "<td>". $dep->countDepCoffe() . "</td>";
-			echo "<td>". $dep->countDepPapers() . "</td>";
-			echo "<td>". $dep->countDepPageCost() . "</td>";
-			echo "</tr>";
-		}
-
-		$totals = $org->getOrgTotals();
-		
-		echo "<tr><td>Средне</td>";
-		echo "<td>" . $totals->avgPeople . "</td>";
-		echo "<td>" . '..' . "</td>";
-
-		echo "<td>" . $totals->avgSalary . "</td>";
-		echo "<td>" . $totals->avgCoffe . "</td>";
-		echo "<td>" . $totals->avgPapers . "</td>";
-		echo "<td>" . $totals->avgCost . "</td>";		
-		echo "</tr>";
-
-		echo "<tr><td>Всего</td>";
-		echo "<td>" . $totals->totalPeople . "</td>";
-		echo "<td>" . '..' . "</td>";
-
-		echo "<td>" . $totals->totalSalary . "</td>";
-		echo "<td>" . $totals->totalCoffe . "</td>";
-		echo "<td>" . $totals->totalPapers . "</td>";
-		echo "<td>" . $totals->totalCost . "</td>";		
-		echo "</tr>";
-
-		echo "</tbody></table></div>";
-
+	public function __destruct() {
+		include 'views/footer.php';
 	}
 
-	static public function browserReport(Organisation $org) {
-		self::pageHeader();
-		self::reportBody($org);
-		self::pageFooter();
+	public function reportBody(Organisation $org) {
+		$orgInfo = $org->getOrgInfo();
+		include 'views/reportBody.php';
 	}
 
-	static public function simpleReport(Organisation $org) {
-		//echo "<meta charset=utf-8>";
-		echo "<pre>";
-		echo "Департамент      сотр.        тугр.           кофе          стр.         тугр/стр.\n";
-		foreach ($org->getDepartments() as $dep) {
-			echo $dep->getName(). "           " .
-				$dep->countDepEmployees(). "         " .
-				$dep->countDepSalary(). "          " .			
-				$dep->countDepCoffe(). "          " .		
-				$dep->countDepPapers(). "          " .			
-				$dep->countDepPageCost() . "\n";
-		}
-		$totals = $org->getOrgTotals();
-		echo "\nСредне" . "            " .
-		$totals->avgPeople . "     " .
-		$totals->avgSalary . "         " .	
-		$totals->avgCoffe . "        " .
-		$totals->avgPapers . "       " .
-		$totals->avgCost . "\n";
-		echo "Всего" . "             " .
-		$totals->totalPeople . "         " .
-		$totals->totalSalary . "        " .	
-		$totals->totalCoffe . "        " .
-		$totals->totalPapers . "       " .
-		$totals->totalCost . "\n";
+	public function browserReport(Organisation $org) {
+		$this->reportBody($org);
 	}
+}
+class OrgInfo {
+	public $totalPeople = 0;
+	public $avgPeople = 0;
+
+	public $totalRang = 0;
+	public $avgRang = 0;
+	
+	public $totalSalary = 0;
+	public $avgSalary = 0;
+	
+	public $totalCoffe = 0;
+	public $avgCoffe = 0;
+
+	public $totalPapers = 0;
+	public $avgPapers = 0;
+
+	public $totalCost = 0;
+	public $avgCost = 0;
 
 }
+
 
 class Organisation {
 
 	private $name;
 	private $departments = [];
 
-	public function __construct($name) {
+	public function __construct(string $name) {
 		$this->name = $name;		
 	}
 
 	public function addDepartment(Department $dep) { 
 		if (!in_array($dep, $this->departments, true)) {
 			$this->departments[] = $dep;
+		} else {
+			throw new Exception('Департамент ' . $dep->getName() . ' уже существует.');
 		}
  
 	}
@@ -126,46 +78,29 @@ class Organisation {
 		return count($this->departments);
 	}
 
-	public function getOrgTotals() {
-		$info = new stdClass();
-		$info->totalPeople = 0;
-		$info->avgPeople = 0;
-
-		$info->totalRang = 0;
-		$info->avgRang = 0;
-
-		$info->totalSalary = 0;
-		$info->avgSalary = 0;
-
-		$info->totalCoffe = 0;
-		$info->avgCoffe = 0;
-
-		$info->totalPapers = 0;
-		$info->avgPapers = 0;
-
-		$info->totalCost = 0;
-		$info->avgCost = 0;
+	public function getOrgInfo() {
+		$orgInfo = new OrgInfo();
 
 		foreach($this->getDepartments() as $dep) {
-			$info->totalPeople += $dep->countDepEmployees();
-			$info->totalRang += $dep->countAveregeEmployeeRang();
-			$info->totalSalary += $dep->countDepSalary();
-			$info->totalCoffe += $dep->countDepCoffe();
-			$info->totalPapers += $dep->countDepPapers();
-			$info->totalCost += $dep->countDepPageCost();
+			$orgInfo->totalPeople += $dep->countDepEmployees();
+			$orgInfo->totalRang += $dep->countAveregeEmployeeRang();
+			$orgInfo->totalSalary += $dep->countDepSalary();
+			$orgInfo->totalCoffe += $dep->countDepCoffe();
+			$orgInfo->totalPapers += $dep->countDepPapers();
+			$orgInfo->totalCost += $dep->countDepPageCost();
 		}
 
 		$depsCount = $this->countDepartments();
 
 		if ($depsCount > 0) {
-			$info->avgPeople = ($info->totalPeople / $depsCount);
-			$info->avgRang = ($info->totalRang / $depsCount);
-			$info->avgSalary = ($info->totalSalary / $depsCount);
-			$info->avgCoffe = ($info->totalCoffe / $depsCount);
-			$info->avgPapers = ($info->totalPapers / $depsCount);
-			$info->avgCost = ($info->totalCost / $depsCount);
+			$orgInfo->avgPeople = ($orgInfo->totalPeople / $depsCount);
+			$orgInfo->avgRang = ($orgInfo->totalRang / $depsCount);
+			$orgInfo->avgSalary = ($orgInfo->totalSalary / $depsCount);
+			$orgInfo->avgCoffe = ($orgInfo->totalCoffe / $depsCount);
+			$orgInfo->avgPapers = ($orgInfo->totalPapers / $depsCount);
+			$orgInfo->avgCost = ($orgInfo->totalCost / $depsCount);
 		}
-		return $info;
+		return $orgInfo;
 	}
 
 }
@@ -176,7 +111,7 @@ class Department {
 	private $name;
 	private $employees = array();
 
-	public function __construct($name) {
+	public function __construct(string $name) {
 		$this->name = $name;
 	}
 
@@ -219,7 +154,7 @@ class Department {
 		return $this->employees;
 	}
 
-	public function getAllCertainSpecialists($specialist) { //put string typehint on php version 7.0+, currently on 5.6
+	public function getAllCertainSpecialists(string $specialist) {
 		if (get_parent_class($specialist) != 'Employee') {
 			return false;
 		}
@@ -255,13 +190,7 @@ class Department {
 			}
 		}
 	}
-	public function makeLeaderByName($name) {
-		foreach ($this->getEmployees() as $employee) {
-			if ($employee->getName() == $name) {
-				$employee->setLeader(true);
-			}
-		}
-	}
+
 	public function demoteLeader() {
 		foreach($this->getEmployees() as $employee) {
 			//var_dump($employee->isLeader());
@@ -505,43 +434,66 @@ class OrganisationBuilder {
 	public $org;
 	public $dep;
 
+	private function exceptionEcho($e) {
+		//to prevent copypaste this 4 times in function below
+		echo 'Выброшено исключение: ',  $e->getMessage(), "\n";
+	}
+
 	public function createDefaultVector() {
 		$this->org = new Organisation('Вектор');
+		
+		try {
+			// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
+			$this->dep = new Department('Закупок');
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
+			$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
+			$this->org->addDepartment($this->dep);			
+		} catch (Exception $e) {
+			$this->exceptionEcho($e);
+		}
 
-		// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
-		$this->dep = new Department('Закупок');
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
-		$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
-		$this->org->addDepartment($this->dep);		
+		try {
+			// Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
+			$this->dep = new Department('Продаж');		
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
+			$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
+			$this->dep->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
+			$this->dep->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
+			$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
+			$this->org->addDepartment($this->dep);
+		} catch (Exception $e) {
+			$this->exceptionEcho($e);
+		}
 
-		// Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
-		$this->dep = new Department('Продаж');		
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
-		$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
-		$this->dep->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
-		$this->dep->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
-		$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
-		$this->org->addDepartment($this->dep);
+		try {
+			// Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
+			$this->dep = new Department('Рекламы');		
+			$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
+			$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
+			$this->dep->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
+			$this->dep->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
+			$this->org->addDepartment($this->dep);
 
-		// Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
-		$this->dep = new Department('Рекламы');		
-		$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
-		$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
-		$this->dep->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
-		$this->dep->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
-		$this->org->addDepartment($this->dep);
+		} catch (Exception $e) {
+			$this->exceptionEcho($e);
+		}
 
-		// Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
-		$this->dep = new Department('Логистики');		
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
-		$this->dep->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
-		$this->dep->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
-		$this->org->addDepartment($this->dep);
+		try {
+			// Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
+			$this->dep = new Department('Логистики');		
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
+			$this->dep->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
+			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
+			$this->org->addDepartment($this->dep);
+		} catch (Exception $e) {
+
+			$this->exceptionEcho($e);
+		}
 
 		return $this->org;
 	}
@@ -649,8 +601,10 @@ class AntiCrisis {
 
 $builder = new OrganisationBuilder();
 $org = $builder->createDefaultVector();
-Reporter::browserReport($org);
+
+$reporter = new Reporter();
+$reporter->browserReport($org);
 
 $anti = new AntiCrisis($org);
 $anti->thirdAntiCrisisMethod();
-Reporter::browserReport($org);
+$reporter->browserReport($org);
