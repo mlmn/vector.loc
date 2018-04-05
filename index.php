@@ -10,6 +10,11 @@ class Dbg {
 		print_r($var);
 		exit;
 	}
+
+	static public function exceptionEcho($e) {
+		//to prevent copypaste this 4 times in function below
+		echo 'Выброшено исключение: ',  $e->getMessage(), "\n";
+	}	
 }
 
 class Reporter {
@@ -31,6 +36,7 @@ class Reporter {
 	}
 }
 class OrgInfo {
+
 	public $totalPeople = 0;
 	public $avgPeople = 0;
 
@@ -105,6 +111,27 @@ class Organisation {
 
 }
 
+class EmployeeSelector {
+	private $class;
+	private $rang = [];
+	private $leader = [];
+
+	public function __construct(string $class, array $rang, array $leader) {
+		$this->class = $class;
+		$this->rang = $rang;
+		$this->leader = $leader;
+	}
+	public function getClass() {
+		return $this->class;
+	}
+	public function getRang() {
+		return $this->rang;
+	}
+	public function getLeader() {
+		return $this->leader;
+	}
+}
+
 
 class Department {
 
@@ -122,13 +149,21 @@ class Department {
 	public function addEmployee(Employee $employee) {
 		if (!in_array($employee, $this->employees, true)) {
 			$this->employees[] = $employee;
+		} else {
+			throw new Exception('Такой сотрудник уже есть.');
 		}
 	}
 
 	public function addEmployees(array $employees) {
 		foreach ($employees as $employee) {
-			if (is_object($employee) and get_parent_class($employee) == 'Employee') {
-				$this->addEmployee($employee);
+			if ($employee instanceof Employee) {
+				try {
+					$this->addEmployee($employee);
+				} catch (Exception $e) {
+					Dbg::exceptionEcho($e);
+				}
+			} else {
+				throw new Exception('Переданный аргумент не является объектом класса Employee.');
 			}
 		}
 	}
@@ -149,23 +184,23 @@ class Department {
 		}
 	}
 
-
 	public function getEmployees() {
 		return $this->employees;
 	}
 
-	public function getAllCertainSpecialists(string $specialist) {
-		if (get_parent_class($specialist) != 'Employee') {
-			return false;
-		}
-
-		$engineersList = [];
+	public function getAllCertainSpecialists(EmployeeSelector $employeeSelector)  {
+		$employeeList = [];
 		foreach ($this->getEmployees() as $employee) {
-			if (get_class($employee) == $specialist) {
-				$engineersList[] = $employee;
+			$classMatch = (get_class($employee) == $employeeSelector->getClass());		 	
+			$rangMatch = (in_array($employee->getRang(), $employeeSelector->getRang()));
+			$leaderMatch = (in_array($employee->isLeader(), $employeeSelector->getLeader()));
+
+			if ($classMatch and $rangMatch and $leaderMatch) {
+				$employeeList[] = $employee;
+				
 			}
 		}
-		return $engineersList;
+		return $employeeList;
 	}
 
 	public function getTopAnalyst() {
@@ -434,10 +469,7 @@ class OrganisationBuilder {
 	public $org;
 	public $dep;
 
-	private function exceptionEcho($e) {
-		//to prevent copypaste this 4 times in function below
-		echo 'Выброшено исключение: ',  $e->getMessage(), "\n";
-	}
+
 
 	public function createDefaultVector() {
 		$this->org = new Organisation('Вектор');
@@ -452,7 +484,7 @@ class OrganisationBuilder {
 			$this->dep->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
 			$this->org->addDepartment($this->dep);			
 		} catch (Exception $e) {
-			$this->exceptionEcho($e);
+			Dbg::exceptionEcho($e);
 		}
 
 		try {
@@ -465,7 +497,7 @@ class OrganisationBuilder {
 			$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
 			$this->org->addDepartment($this->dep);
 		} catch (Exception $e) {
-			$this->exceptionEcho($e);
+			Dbg::exceptionEcho($e);
 		}
 
 		try {
@@ -479,7 +511,7 @@ class OrganisationBuilder {
 			$this->org->addDepartment($this->dep);
 
 		} catch (Exception $e) {
-			$this->exceptionEcho($e);
+			Dbg::exceptionEcho($e);
 		}
 
 		try {
@@ -491,8 +523,7 @@ class OrganisationBuilder {
 			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
 			$this->org->addDepartment($this->dep);
 		} catch (Exception $e) {
-
-			$this->exceptionEcho($e);
+			Dbg::exceptionEcho($e);
 		}
 
 		return $this->org;
@@ -500,16 +531,18 @@ class OrganisationBuilder {
 }
 
 class AntiCrisis {
-	private $organisation;
 	private $departments;
 
-	public function __construct(Organisation $organisation) {
-		$this->organisation = $organisation;
-		$this->departments = $this->organisation->getDepartments();
+	public function __construct(Organisation $organisation) {		
+		$this->departments = $organisation->getDepartments();
 	}
 
 	private function prepareFireListOfEngineersInDepartment(Department $dep) {
-		$engineersList = $dep->getAllCertainSpecialists('Engineer');
+
+		$employeeSelector = new EmployeeSelector('Engineer', [1, 2, 3], [true, false]);
+
+		$engineersList = $dep->getAllCertainSpecialists($employeeSelector);
+		var_dump($engineersList);
 		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
 		$fireList = [];
 		$rangAvailableToFire = 1;
@@ -564,7 +597,11 @@ class AntiCrisis {
 	}
 
 	public function preparePromoteListOfManagersInDepartment(Department $dep, array $rangs) {
-			$managersList = $dep->getAllCertainSpecialists('Manager');
+
+			$employeeSelector = new EmployeeSelector('Manager', array(1, 2, 3), array(true, false));
+			$managersList = $dep->getAllCertainSpecialists($employeeSelector);
+			//Dbg::cd($managersList);
+
 			$totalAvailableToPromote = 0;
 			$managersOfSertainRangs = [];
 			foreach ($managersList as $manager) {
