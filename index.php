@@ -36,6 +36,8 @@ class Reporter {
 	}
 }
 class OrgInfo {
+	public $orgName = '';
+	public $orgTitle = '';
 
 	public $totalPeople = 0;
 	public $avgPeople = 0;
@@ -61,10 +63,23 @@ class OrgInfo {
 class Organisation {
 
 	private $name;
+	private $title;
 	private $departments = [];
 
-	public function __construct(string $name) {
-		$this->name = $name;		
+	public function __construct(string $name, string $title) {
+		$this->name = $name;
+		$this->title = $title;	
+	}
+
+	public function setTitle(string $title) {
+		$this->title = $title;
+	}
+
+	public function getTitle() {
+		return $this->title;
+	}
+	public function getName() {
+		return $this->name;
 	}
 
 	public function addDepartment(Department $dep) { 
@@ -86,6 +101,9 @@ class Organisation {
 
 	public function getOrgInfo() {
 		$orgInfo = new OrgInfo();
+
+		$orgInfo->orgName = $this->getName();
+		$orgInfo->orgTitle = $this->getTitle();
 
 		foreach($this->getDepartments() as $dep) {
 			$orgInfo->totalPeople += $dep->countDepEmployees();
@@ -168,17 +186,18 @@ class Department {
 		}
 	}
 
-	public function fireStuffByName(array $fireList) {
+	public function fireStuff(array $fireList) {
 		foreach($this->getEmployees() as $number => $employee) {
-			if (in_array($employee->getName(), $fireList)) {
+			if (in_array($employee, $fireList)) {
 				//var_dump($this->employees);
 				unset($this->employees[$number]);
 			}
 		}
 	}
-	public function promoteStuffByName(array $promotionList) {
+
+	public function promoteStuff(array $promotionList) {
 		foreach($this->getEmployees() as $number => $employee) {
-			if (in_array($employee->getName(), $promotionList)) {
+			if (in_array($employee, $promotionList)) {
 				$employee->upRang();
 			}
 		}
@@ -203,20 +222,7 @@ class Department {
 		return $employeeList;
 	}
 
-	public function getTopAnalyst() {
-		$topAnalyst = null;
-		$topRang = 0;
-		foreach ($this->getEmployees() as $employee) {
-			if(get_class($employee) == 'Analyst') {
-				$rang = $employee->getRang();
-				if ($rang > $topRang) {
-					$topRang = $rang;
-					$topAnalyst = $employee;
-				}
-			}
-		}
-		return $topAnalyst;
-	}
+
 
 	public function getLeader() {
 		foreach ($this->getEmployees() as $employee) {
@@ -226,23 +232,26 @@ class Department {
 		}
 	}
 
-	public function demoteLeader() {
+	private function demoteLeader() {
 		foreach($this->getEmployees() as $employee) {
-			//var_dump($employee->isLeader());
 			if ($employee->isLeader() == true) {
 				$employee->setLeader(false);
 			}
 		}
 	}
 
-	public function promoteLeaderByName($name) {
+	private function promoteLeader(Employee $newLeader) {
 		foreach($this->getEmployees() as $employee) {
-			if ($employee->getName() == $name) {
+			if ($employee == $newLeader) {
 				$employee->setLeader(true);
 			}
 		}
 	}
 
+	public function swapLeader(Employee $newLeader) {
+		$this->demoteLeader();
+		$this->promoteLeader($newLeader);
+	}
 
 	public function countDepEmployees() {
 		return count($this->getEmployees());
@@ -472,7 +481,7 @@ class OrganisationBuilder {
 
 
 	public function createDefaultVector() {
-		$this->org = new Organisation('Вектор');
+		$this->org = new Organisation('Вектор', 'ванильный');
 		
 		try {
 			// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
@@ -531,9 +540,11 @@ class OrganisationBuilder {
 }
 
 class AntiCrisis {
+	private $organisation;
 	private $departments;
 
-	public function __construct(Organisation $organisation) {		
+	public function __construct(Organisation $organisation) {
+		$this->organisation = $organisation;
 		$this->departments = $organisation->getDepartments();
 	}
 
@@ -542,7 +553,7 @@ class AntiCrisis {
 		$employeeSelector = new EmployeeSelector('Engineer', [1, 2, 3], [true, false]);
 
 		$engineersList = $dep->getAllCertainSpecialists($employeeSelector);
-		var_dump($engineersList);
+		//var_dump($engineersList);
 		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
 		$fireList = [];
 		$rangAvailableToFire = 1;
@@ -555,7 +566,7 @@ class AntiCrisis {
 					break(2);
 				}
 				if ((!$engineer->isLeader()) and ($engineer->getRang() <= $rangAvailableToFire)) {
-					$fireList[] = $engineer->getName();
+					$fireList[] = $engineer;
 				}
 			}
 			$rangAvailableToFire++;
@@ -566,26 +577,45 @@ class AntiCrisis {
 	public function firstAntiCrisisMethod() { //fireEngineers
 		foreach($this->departments as $dep) {
 			$fireList = $this->prepareFireListOfEngineersInDepartment($dep);
-			$dep->fireStuffByName($fireList);
+			$dep->fireStuff($fireList);
 		}
+
+		$this->organisation->setTitle("после антикризисных мер #1"); 
 	}
 
 	private function boostAnalystsInDepartment(Department $dep) {
 		$employees = $dep->getEmployees();
 		foreach($employees as $employee) {
-			if (get_class($employee) == 'Analyst') {
+			if ($employee instanceof Analyst) {
 				$employee->setBaseSalary(1100);
 				$employee->setBaseCoffe(75);
 			}
 		}
 	}
 
+	private function getTopAnalyst(array $employees) {
+		$topAnalyst = null;
+		$topRang = 0;
+		foreach ($employees as $employee) {
+			if ($employee instanceof Analyst) {
+				$rang = $employee->getRang();
+				if ($rang > $topRang) {
+					$topRang = $rang;
+					$topAnalyst = $employee;
+				}			
+			}
+		}
+		return $topAnalyst;
+	}
+
 	private function makeAnalystLeaderInDepartment(Department $dep) {
 		$leader = $dep->getLeader();
-		$topAnalyst = $dep->getTopAnalyst();
+		$topAnalyst = $this->getTopAnalyst($dep->getEmployees());
+		//echo "<pre>";
+		//var_dump($topAnalyst);
 		if (get_class($leader) != 'Analyst' and $topAnalyst != null) {
-			$dep->demoteLeader();
-			$dep->promoteLeaderByName($topAnalyst->getName());
+
+			$dep->swapLeader($topAnalyst);
 		}
 	}
 
@@ -594,6 +624,8 @@ class AntiCrisis {
 			$this->boostAnalystsInDepartment($dep);
 			$this->makeAnalystLeaderInDepartment($dep);
 		}
+
+		$this->organisation->setTitle("после антикризисных мер #2"); 
 	}
 
 	public function preparePromoteListOfManagersInDepartment(Department $dep, array $rangs) {
@@ -617,7 +649,7 @@ class AntiCrisis {
 				$neededToPromote = ceil(0.5 * ($thisRangToPromote));
 
 				for ($i = 0; $i < $neededToPromote; $i++) {
-					$promotionList[] = $currentRangManagers[$i]->getName();
+					$promotionList[] = $currentRangManagers[$i];
 				}
 			}
 			return $promotionList;
@@ -629,19 +661,34 @@ class AntiCrisis {
 		$rangsToPromote = array(1, 2);
 		foreach ($this->departments as $dep) {
 			$promotionList = $this->preparePromoteListOfManagersInDepartment($dep, $rangsToPromote);
-			$dep->promoteStuffByName($promotionList);
+			//echo "<pre>";
+			//var_dump($promotionList);
+
+			$dep->promoteStuff($promotionList);
 
 		}
+		$this->organisation->setTitle("после антикризисных мер #3"); 
 	}
 
 }
 
 $builder = new OrganisationBuilder();
-$org = $builder->createDefaultVector();
+$vectorVanilla = $builder->createDefaultVector();
 
 $reporter = new Reporter();
-$reporter->browserReport($org);
+$reporter->browserReport($vectorVanilla);
 
-$anti = new AntiCrisis($org);
+$vectorFirstAC = clone $vectorVanilla;
+$anti = new AntiCrisis($vectorFirstAC);
+$anti->firstAntiCrisisMethod();
+$reporter->browserReport($vectorFirstAC);
+
+$vectorSecondAC = clone $vectorVanilla;
+$anti = new AntiCrisis($vectorSecondAC);
+$anti->secondAntiCrisisMethod();
+$reporter->browserReport($vectorSecondAC);
+
+$vectorThirdAC = clone $vectorVanilla;
+$anti = new AntiCrisis($vectorThirdAC);
 $anti->thirdAntiCrisisMethod();
-$reporter->browserReport($org);
+$reporter->browserReport($vectorThirdAC);
