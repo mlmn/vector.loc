@@ -12,7 +12,6 @@ class Dbg {
 	}
 
 	static public function exceptionEcho($e) {
-		//to prevent copypaste this 4 times in function below
 		echo 'Выброшено исключение: ',  $e->getMessage(), "\n";
 	}	
 }
@@ -25,16 +24,12 @@ class Reporter {
 	public function __destruct() {
 		include 'views/footer.php';
 	}
-
-	public function reportBody(Organisation $org) {
+	public function browserReport(Organisation $org) {
 		$orgInfo = $org->getOrgInfo();
 		include 'views/reportBody.php';
 	}
-
-	public function browserReport(Organisation $org) {
-		$this->reportBody($org);
-	}
 }
+
 class OrgInfo {
 	public $orgName = '';
 	public $orgTitle = '';
@@ -475,49 +470,47 @@ class PeopleFactory {
 }
 
 class OrganisationBuilder {
-	public $org;
-	public $dep;
-
-
+	private $org;
 
 	public function createDefaultVector() {
 		$this->org = new Organisation('Вектор', 'ванильный');
 		
 		try {
 			// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
-			$this->dep = new Department('Закупок');
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
-			$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
-			$this->org->addDepartment($this->dep);			
+			$department1 = new Department('Закупок');
+
+			$department1->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
+						$department1->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
+			$department1->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
+			$department1->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
+			$department1->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
+			$this->org->addDepartment($department1);			
 		} catch (Exception $e) {
 			Dbg::exceptionEcho($e);
 		}
 
 		try {
 			// Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
-			$this->dep = new Department('Продаж');		
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
-			$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
-			$this->dep->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
-			$this->dep->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
-			$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
-			$this->org->addDepartment($this->dep);
+			$department2 = new Department('Продаж');		
+			$department2->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
+			$department2->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
+			$department2->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
+			$department2->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
+			$department2->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
+			$this->org->addDepartment($department2);
 		} catch (Exception $e) {
 			Dbg::exceptionEcho($e);
 		}
 
 		try {
 			// Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
-			$this->dep = new Department('Рекламы');		
-			$this->dep->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
-			$this->dep->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
-			$this->dep->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
-			$this->dep->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
-			$this->org->addDepartment($this->dep);
+			$department3 = new Department('Рекламы');		
+			$department3->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
+			$department3->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
+			$department3->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
+			$department3->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
+			$department3->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
+			$this->org->addDepartment($department3);
 
 		} catch (Exception $e) {
 			Dbg::exceptionEcho($e);
@@ -525,12 +518,12 @@ class OrganisationBuilder {
 
 		try {
 			// Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
-			$this->dep = new Department('Логистики');		
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
-			$this->dep->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
-			$this->dep->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
-			$this->org->addDepartment($this->dep);
+			$department4 = new Department('Логистики');		
+			$department4->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
+			$department4->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
+			$department4->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
+			$department4->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
+			$this->org->addDepartment($department4);
 		} catch (Exception $e) {
 			Dbg::exceptionEcho($e);
 		}
@@ -541,42 +534,43 @@ class OrganisationBuilder {
 
 class AntiCrisis {
 	private $organisation;
-	private $departments;
 
 	public function __construct(Organisation $organisation) {
 		$this->organisation = $organisation;
-		$this->departments = $organisation->getDepartments();
 	}
 
-	private function prepareFireListOfEngineersInDepartment(Department $dep) {
-
+	private function prepareEngineersForFire(Department $dep) {
 		$employeeSelector = new EmployeeSelector('Engineer', [1, 2, 3], [true, false]);
-
 		$engineersList = $dep->getAllCertainSpecialists($employeeSelector);
-		//var_dump($engineersList);
 		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
-		$fireList = [];
-		$rangAvailableToFire = 1;
-		$startFire = true;		
-		while ($startFire == true and $needToFire > 0) {
-			foreach($engineersList as $engineer) {				
-				$countFireList = count($fireList);
-				if ($needToFire <= $countFireList) {
-					$startFire = false;
-					break(2);
-				}
-				if ((!$engineer->isLeader()) and ($engineer->getRang() <= $rangAvailableToFire)) {
-					$fireList[] = $engineer;
-				}
+
+		//sorting employees by rang;
+		usort($engineersList, function($a, $b) {
+			if ($a->getRang() == $b->getRang()) {
+				return 0;
 			}
-			$rangAvailableToFire++;
-		}
+			return ($a->getRang() < $b->getRang()) ? -1 : 1;
+		});
+
+		//then sorting by leader, because leader is always last to fire;
+		usort($engineersList, function($a, $b) {
+			if ($a->isLeader() == $b->isLeader()) {
+				return 0;
+			}
+			if ($a->isLeader() == false and $b->isLeader() == true) {
+				return -1;
+			} else {
+				return 1;
+			}
+		});
+		$fireList = array_slice($engineersList, 0, $needToFire);
+
 		return $fireList;
 	}
 
 	public function firstAntiCrisisMethod() { //fireEngineers
-		foreach($this->departments as $dep) {
-			$fireList = $this->prepareFireListOfEngineersInDepartment($dep);
+		foreach($this->organisation->getDepartments() as $dep) {
+			$fireList = $this->prepareEngineersForFire($dep);
 			$dep->fireStuff($fireList);
 		}
 
@@ -611,20 +605,16 @@ class AntiCrisis {
 	private function makeAnalystLeaderInDepartment(Department $dep) {
 		$leader = $dep->getLeader();
 		$topAnalyst = $this->getTopAnalyst($dep->getEmployees());
-		//echo "<pre>";
-		//var_dump($topAnalyst);
 		if (get_class($leader) != 'Analyst' and $topAnalyst != null) {
-
 			$dep->swapLeader($topAnalyst);
 		}
 	}
 
 	public function secondAntiCrisisMethod() { //boostAnalysts
-		foreach($this->departments as $dep) {
+		foreach($this->organisation->getDepartments() as $dep) {
 			$this->boostAnalystsInDepartment($dep);
 			$this->makeAnalystLeaderInDepartment($dep);
 		}
-
 		$this->organisation->setTitle("после антикризисных мер #2"); 
 	}
 
@@ -632,8 +622,6 @@ class AntiCrisis {
 
 			$employeeSelector = new EmployeeSelector('Manager', array(1, 2, 3), array(true, false));
 			$managersList = $dep->getAllCertainSpecialists($employeeSelector);
-			//Dbg::cd($managersList);
-
 			$totalAvailableToPromote = 0;
 			$managersOfSertainRangs = [];
 			foreach ($managersList as $manager) {
@@ -659,13 +647,9 @@ class AntiCrisis {
 
 	public function thirdAntiCrisisMethod() { //promote 50% of department managers
 		$rangsToPromote = array(1, 2);
-		foreach ($this->departments as $dep) {
+		foreach ($this->organisation->getDepartments() as $dep) {
 			$promotionList = $this->preparePromoteListOfManagersInDepartment($dep, $rangsToPromote);
-			//echo "<pre>";
-			//var_dump($promotionList);
-
 			$dep->promoteStuff($promotionList);
-
 		}
 		$this->organisation->setTitle("после антикризисных мер #3"); 
 	}
