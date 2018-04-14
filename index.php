@@ -11,9 +11,9 @@ class Dbg {
 		exit;
 	}
 
-	static public function exceptionEcho($e) {
+	static public function exceptionEcho(Exception $e) {
 		echo 'Выброшено исключение: ',  $e->getMessage(), "\n";
-	}	
+	}
 }
 
 class Reporter {
@@ -94,7 +94,7 @@ class Organisation {
 		return count($this->departments);
 	}
 
-	public function getOrgInfo() {
+	public function getOrgInfo(): OrgInfo {
 		$orgInfo = new OrgInfo();
 
 		$orgInfo->orgName = $this->getName();
@@ -198,11 +198,11 @@ class Department {
 		}
 	}
 
-	public function getEmployees() {
+	public function getEmployees(): array {
 		return $this->employees;
 	}
 
-	public function getAllCertainSpecialists(EmployeeSelector $employeeSelector)  {
+	public function getAllCertainSpecialists(EmployeeSelector $employeeSelector): array {
 		$employeeList = [];
 		foreach ($this->getEmployees() as $employee) {
 			$classMatch = (get_class($employee) == $employeeSelector->getClass());		 	
@@ -219,7 +219,7 @@ class Department {
 
 
 
-	public function getLeader() {
+	public function getLeader(): Employee {
 		foreach ($this->getEmployees() as $employee) {
 			if ($employee->isLeader()) {
 				return $employee;
@@ -248,11 +248,11 @@ class Department {
 		$this->promoteLeader($newLeader);
 	}
 
-	public function countDepEmployees() {
+	public function countDepEmployees(): int {
 		return count($this->getEmployees());
 	}
 
-	public function countDepCoffe() {
+	public function countDepCoffe(): int {
 		$depCoffe = 0;
 		foreach ($this->getEmployees() as $employee) {
 			$depCoffe += $employee->getCoffe();
@@ -260,7 +260,7 @@ class Department {
 		return $depCoffe;
 	}
 
-	public function countDepPapers() {
+	public function countDepPapers(): int {
 		$depPapers = 0;
 		foreach ($this->getEmployees() as $employee) {
 			$depPapers += $employee->getPapers();
@@ -268,7 +268,7 @@ class Department {
 		return $depPapers;
 	}
 
-	public function countDepSalary() {
+	public function countDepSalary(): float {
 		$depSalary = 0;
 		foreach ($this->getEmployees() as $employee) {
 			$depSalary += $employee->getSalary();
@@ -276,7 +276,7 @@ class Department {
 		return $depSalary;		
 	}
 
-	public function countDepPageCost() {
+	public function countDepPageCost(): float {
 		if ($this->countDepPapers() == 0) {
 			return 0;
 		} else {
@@ -286,7 +286,7 @@ class Department {
 		}
 	}
 
-	public function countAveregeEmployeeRang() {
+	public function countAveregeEmployeeRang(): float {
 		$avgRang = 0;
 		foreach ($this->getEmployees() as $employee) {
 			$avgRang += $employee->getRang();
@@ -298,8 +298,8 @@ class Department {
 
 }
 
-class Names {
-	public static function generateFullName() {
+class NameGenerator {
+	public static function generateFullName(): string {
 		$fLength = mt_rand(2, 4);
 		$firstName = self::generateName($fLength);
 
@@ -309,7 +309,7 @@ class Names {
 		return $firstName . " " . $secondName;
 	}
 
-	private static function generateName($length) {
+	private static function generateName($length): string {
 		$syllables = [
 			'а', 'и', 'у', 'о', 'е',
 			'на', 'ни','ну', 'но', 'не',
@@ -367,7 +367,7 @@ abstract class Employee {
 		$this->rang++;
 	}
 
-	public function getSalary() {
+	public function getSalary(): float {
 		if ($this->rang == 1) {
 			$rangCoeff = 1;
 		} elseif ($this->rang == 2) {
@@ -387,7 +387,7 @@ abstract class Employee {
 		return $salary;
 	}
 
-	public function getCoffe() {
+	public function getCoffe(): int {
 		if ($this->leader == true) {
 			$leaderCoeff = 2;
 		} else {
@@ -398,7 +398,7 @@ abstract class Employee {
 		return $coffe;
 	}
 
-	public function getPapers() {
+	public function getPapers(): int {
 		if ($this->leader == true) {
 			$leaderCoeff = 0;
 		} else {
@@ -459,10 +459,10 @@ class Analyst extends Employee {
 
 class PeopleFactory {
 	public static function create($class, $rang, $leader, $amount) {		
-		if (get_parent_class($class) == 'Employee') {
+		if (is_subclass_of($class, 'Employee')) {
 			$people = [];
 			for ($i = 0; $i < $amount; $i++) {
-				$people[] = new $class($rang, $leader, Names::generateFullName());
+				$people[] = new $class($rang, $leader, NameGenerator::generateFullName());
 			}
 			return $people;
 		}
@@ -479,8 +479,8 @@ class OrganisationBuilder {
 			// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
 			$department1 = new Department('Закупок');
 
-			$department1->addEmployees(PeopleFactory::create('Manager', 2, false, 3));
-						$department1->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
+			$department1->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
+			$department1->addEmployees(PeopleFactory::create('Manager', 2, false, 3));						
 			$department1->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
 			$department1->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
 			$department1->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
@@ -605,7 +605,7 @@ class AntiCrisis {
 	private function makeAnalystLeaderInDepartment(Department $dep) {
 		$leader = $dep->getLeader();
 		$topAnalyst = $this->getTopAnalyst($dep->getEmployees());
-		if (get_class($leader) != 'Analyst' and $topAnalyst != null) {
+		if (!($leader instanceof Analyst) and $topAnalyst != null) {
 			$dep->swapLeader($topAnalyst);
 		}
 	}
