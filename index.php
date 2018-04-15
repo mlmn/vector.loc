@@ -184,7 +184,6 @@ class Department {
 	public function fireStuff(array $fireList) {
 		foreach($this->getEmployees() as $number => $employee) {
 			if (in_array($employee, $fireList)) {
-				//var_dump($this->employees);
 				unset($this->employees[$number]);
 			}
 		}
@@ -345,7 +344,10 @@ abstract class Employee {
 		$this->name = $name;
 		$this->rang = $rang;
 		$this->leader = $leader;
+		$this->setDefaults();
 	}
+
+	abstract protected function setDefaults();
 
 	public function setBaseSalary($salary) {
 		$this->baseSalary = $salary;
@@ -424,8 +426,7 @@ abstract class Employee {
 
 
 class Manager extends Employee {
-	public function __construct($rang, $leader, $name) {
-		parent::__construct($rang, $leader, $name);
+	protected function setDefaults() {
 		$this->setBaseSalary(500);
 		$this->setBaseCoffe(20);
 		$this->setBasePapers(200);
@@ -433,24 +434,23 @@ class Manager extends Employee {
 }
 
 class Marketer extends Employee {
-	public function __construct($rang, $leader, $name) {
-		parent::__construct($rang, $leader, $name);
+	protected function setDefaults() {
 		$this->setBaseSalary(400);
 		$this->setBaseCoffe(15);
 		$this->setBasePapers(150);
 	}
 }
+
 class Engineer extends Employee {
-	public function __construct($rang, $leader, $name) {
-		parent::__construct($rang, $leader, $name);
+	protected function setDefaults() {
 		$this->setBaseSalary(200);
 		$this->setBaseCoffe(5);
 		$this->setBasePapers(50);
 	}
 }
+
 class Analyst extends Employee {
-	public function __construct($rang, $leader, $name) {
-		parent::__construct($rang, $leader, $name);
+	protected function setDefaults() {
 		$this->setBaseSalary(800);
 		$this->setBaseCoffe(50);
 		$this->setBasePapers(5);
