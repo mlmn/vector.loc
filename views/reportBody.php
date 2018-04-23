@@ -1,6 +1,6 @@
 <div class="container">
 <div class="well">
-	<h4><?=$orgInfo->orgName . " " . $orgInfo->orgTitle?></h4>
+	<h4><?=$org->getName() . " " . $org->getTitle()?></h4>
 	<table class="table">
 		<thead>
 			<tr>
@@ -16,13 +16,13 @@
 		<tbody>
 			<? foreach ($org->getDepartments() as $dep) { ?>
 				<tr>
-					<td><?=$dep->getName();?></td>
-					<td><?=$dep->countDepEmployees();?></td>
-					<td><?=$dep->countAveregeEmployeeRang()?></td>
-					<td><?=$dep->countDepSalary();?></td>
-					<td><?=$dep->countDepCoffe();?></td>
-					<td><?=$dep->countDepPapers();?></td>
-					<td><?=$dep->countDepPageCost();?></td>
+					<td><?=$dep->getName()?></td>
+					<td><?=$dep->countDepEmployees()?></td>
+					<td><?=round($dep->countAveregeEmployeeRang(), 3)?></td>
+					<td><?=$dep->countDepSalary()?></td>
+					<td><?=$dep->countDepCoffe()?></td>
+					<td><?=$dep->countDepPapers()?></td>
+					<td><?=round($dep->countDepPageCost(), 3)?></td>
 				</tr>
 			<? } ?>
 		
@@ -30,22 +30,22 @@
 				
 			<tr>
 				<td>Средне</td>
-				<td><?=$orgInfo->avgPeople;?></td>
+				<td><?=$org->getAvgEmployees()?></td>
 				<td>..</td>
-				<td><?=$orgInfo->avgSalary;?></td>
-				<td><?=$orgInfo->avgCoffe;?></td>
-				<td><?=$orgInfo->avgPapers;?></td>	
-				<td><?=$orgInfo->avgCost;?></td>		
+				<td><?=$org->getAvgSalary()?></td>
+				<td><?=$org->getAvgCoffe()?></td>
+				<td><?=$org->getAvgPapers()?></td>	
+				<td><?=round($org->getAvgPageCost(), 3)?></td>		
 			</tr>
 
 			<tr>
 				<td>Всего</td>
-				<td><?=$orgInfo->totalPeople;?></td>
+				<td><?=$org->getTotalEmployees()?></td>
 				<td>..</td>
-				<td><?=$orgInfo->totalSalary;?></td>
-				<td><?=$orgInfo->totalCoffe;?></td>
-				<td><?=$orgInfo->totalPapers;?></td>
-				<td><?=$orgInfo->totalCost;?></td>
+				<td><?=$org->getTotalSalary()?></td>
+				<td><?=$org->getTotalCoffe()?></td>
+				<td><?=$org->getTotalPapers()?></td>
+				<td><?=round($org->getTotalPageCost(), 3)?></td>
 			</tr>
 
 		</tbody>

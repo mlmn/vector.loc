@@ -2,6 +2,7 @@
 # Задача про компанию «Вектор»
 # http://archive-ipq-co.narod.ru/l1/pasta.html
 mb_internal_encoding('utf-8');
+error_reporting(-1);
 
 class Dbg {
 	static public function cd($var) {
@@ -18,42 +19,16 @@ class Dbg {
 
 class Reporter {
 	
-	public function __construct() {
+	public function browsePageHeader() {
 		include 'views/header.php';
 	}
-	public function __destruct() {
+	public function browsePageFooter() {
 		include 'views/footer.php';
 	}
-	public function browserReport(Organisation $org) {
-		$orgInfo = $org->getOrgInfo();
+	public function browseCompanyReport(Organisation $org) {
 		include 'views/reportBody.php';
 	}
 }
-
-class OrgInfo {
-	public $orgName = '';
-	public $orgTitle = '';
-
-	public $totalPeople = 0;
-	public $avgPeople = 0;
-
-	public $totalRang = 0;
-	public $avgRang = 0;
-	
-	public $totalSalary = 0;
-	public $avgSalary = 0;
-	
-	public $totalCoffe = 0;
-	public $avgCoffe = 0;
-
-	public $totalPapers = 0;
-	public $avgPapers = 0;
-
-	public $totalCost = 0;
-	public $avgCost = 0;
-
-}
-
 
 class Organisation {
 
@@ -86,40 +61,71 @@ class Organisation {
  
 	}
 
-	public function getDepartments() {
-		return $this->departments;
+	public function getDepartments():array {
+		if ($this->countDepartments() == 0) {
+			throw new Exception('Пустая организация, нечего выводить.');
+		} else {
+			return $this->departments;
+		}
+		
 	}
 
-	public function countDepartments() {
+	private function countDepartments():int {
 		return count($this->departments);
 	}
 
-	public function getOrgInfo(): OrgInfo {
-		$orgInfo = new OrgInfo();
+	public function getTotalEmployees():int {
+		$totalEmployees = 0;
+		foreach ($this->getDepartments() as $dep) {
+			$totalEmployees += $dep->countDepEmployees();
+		}
+		return $totalEmployees;
+	}
 
-		$orgInfo->orgName = $this->getName();
-		$orgInfo->orgTitle = $this->getTitle();
-
+	public function getTotalSalary(): int {
+		$totalSalary = 0;
 		foreach($this->getDepartments() as $dep) {
-			$orgInfo->totalPeople += $dep->countDepEmployees();
-			$orgInfo->totalRang += $dep->countAveregeEmployeeRang();
-			$orgInfo->totalSalary += $dep->countDepSalary();
-			$orgInfo->totalCoffe += $dep->countDepCoffe();
-			$orgInfo->totalPapers += $dep->countDepPapers();
-			$orgInfo->totalCost += $dep->countDepPageCost();
+			$totalSalary += $dep->countDepSalary();
 		}
+		return $totalSalary;
+	}
 
-		$depsCount = $this->countDepartments();
-
-		if ($depsCount > 0) {
-			$orgInfo->avgPeople = ($orgInfo->totalPeople / $depsCount);
-			$orgInfo->avgRang = ($orgInfo->totalRang / $depsCount);
-			$orgInfo->avgSalary = ($orgInfo->totalSalary / $depsCount);
-			$orgInfo->avgCoffe = ($orgInfo->totalCoffe / $depsCount);
-			$orgInfo->avgPapers = ($orgInfo->totalPapers / $depsCount);
-			$orgInfo->avgCost = ($orgInfo->totalCost / $depsCount);
+	public function getTotalCoffe(): int {
+		$totalCoffe = 0;
+		foreach($this->getDepartments() as $dep) {
+			$totalCoffe += $dep->countDepCoffe();
 		}
-		return $orgInfo;
+		return $totalCoffe;
+	}
+	public function getTotalPapers(): int {
+		$totalPapers = 0;
+		foreach($this->getDepartments() as $dep) {
+			$totalPapers += $dep->countDepPapers();
+		}
+		return $totalPapers;
+	}
+	public function getTotalPageCost(): float {
+		$totalPageCost = 0;
+		foreach($this->getDepartments() as $dep) {
+			$totalPageCost += $dep->countDepPageCost();
+		}
+		return $totalPageCost;
+	}
+
+	public function getAvgEmployees():float {
+		return $this->getTotalEmployees() / $this->countDepartments();
+	}
+	public function getAvgSalary(): float {
+		return $this->getTotalSalary() / $this->countDepartments();
+	}
+	public function getAvgCoffe(): float {
+		return $this->getTotalCoffe() / $this->countDepartments();
+	}
+	public function getAvgPapers(): float {
+		return $this->getTotalPapers() / $this->countDepartments();
+	}
+	public function getAvgPageCost(): float {
+		return $this->getTotalPageCost() / $this->countDepartments();
 	}
 
 }
@@ -277,11 +283,9 @@ class Department {
 
 	public function countDepPageCost(): float {
 		if ($this->countDepPapers() == 0) {
-			return 0;
+			throw new Exception('Деление на 0');
 		} else {
-			$pageCost = $this->countDepSalary() / $this->countDepPapers();
-			
-			return round($pageCost, 3);
+			return $this->countDepSalary() / $this->countDepPapers();
 		}
 	}
 
@@ -291,7 +295,7 @@ class Department {
 			$avgRang += $employee->getRang();
 		}
 		$avgRang /= count($this->getEmployees());
-		return round($avgRang, 3);
+		return $avgRang;
 	}
 
 
@@ -660,19 +664,22 @@ $builder = new OrganisationBuilder();
 $vectorVanilla = $builder->createDefaultVector();
 
 $reporter = new Reporter();
-$reporter->browserReport($vectorVanilla);
+$reporter->browsePageHeader();
+$reporter->browseCompanyReport($vectorVanilla);
 
 $vectorFirstAC = clone $vectorVanilla;
 $anti = new AntiCrisis($vectorFirstAC);
 $anti->firstAntiCrisisMethod();
-$reporter->browserReport($vectorFirstAC);
+$reporter->browseCompanyReport($vectorFirstAC);
 
 $vectorSecondAC = clone $vectorVanilla;
 $anti = new AntiCrisis($vectorSecondAC);
 $anti->secondAntiCrisisMethod();
-$reporter->browserReport($vectorSecondAC);
+$reporter->browseCompanyReport($vectorSecondAC);
 
 $vectorThirdAC = clone $vectorVanilla;
 $anti = new AntiCrisis($vectorThirdAC);
 $anti->thirdAntiCrisisMethod();
-$reporter->browserReport($vectorThirdAC);
+$reporter->browseCompanyReport($vectorThirdAC);
+
+$reporter->browsePageFooter();
