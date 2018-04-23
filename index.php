@@ -140,13 +140,13 @@ class EmployeeSelector {
 		$this->rang = $rang;
 		$this->leader = $leader;
 	}
-	public function getClass() {
+	public function getClass(): string {
 		return $this->class;
 	}
-	public function getRang() {
+	public function getRang(): array {
 		return $this->rang;
 	}
-	public function getLeader() {
+	public function getLeader(): array {
 		return $this->leader;
 	}
 }
@@ -176,11 +176,7 @@ class Department {
 	public function addEmployees(array $employees) {
 		foreach ($employees as $employee) {
 			if ($employee instanceof Employee) {
-				try {
-					$this->addEmployee($employee);
-				} catch (Exception $e) {
-					Dbg::exceptionEcho($e);
-				}
+				$this->addEmployee($employee);
 			} else {
 				throw new Exception('Переданный аргумент не является объектом класса Employee.');
 			}
@@ -196,7 +192,7 @@ class Department {
 	}
 
 	public function promoteStuff(array $promotionList) {
-		foreach($this->getEmployees() as $number => $employee) {
+		foreach($this->getEmployees() as $employee) {
 			if (in_array($employee, $promotionList)) {
 				$employee->upRang();
 			}
@@ -370,7 +366,10 @@ abstract class Employee {
 	}
 
 	public function upRang() {
-		$this->rang++;
+		if ($this->rang < 3) {
+			$this->rang++;
+		}
+		
 	}
 
 	public function getSalary(): float {
