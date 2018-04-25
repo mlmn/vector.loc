@@ -61,7 +61,7 @@ class Organisation {
  
 	}
 
-	public function getDepartments():array {
+	public function getDepartments(): array {
 		if ($this->countDepartments() == 0) {
 			throw new Exception('Пустая организация, нечего выводить.');
 		} else {
@@ -70,11 +70,11 @@ class Organisation {
 		
 	}
 
-	private function countDepartments():int {
+	private function countDepartments(): int {
 		return count($this->departments);
 	}
 
-	public function getTotalEmployees():int {
+	public function getTotalEmployees(): int {
 		$totalEmployees = 0;
 		foreach ($this->getDepartments() as $dep) {
 			$totalEmployees += $dep->countDepEmployees();
@@ -140,14 +140,36 @@ class EmployeeSelector {
 		$this->rang = $rang;
 		$this->leader = $leader;
 	}
-	public function getClass(): string {
+	private function getClass(): string {
 		return $this->class;
 	}
-	public function getRang(): array {
+	private function getRang(): array {
 		return $this->rang;
 	}
-	public function getLeader(): array {
+	private function getLeader(): array {
 		return $this->leader;
+	}
+
+	public function match(Employee $employee): bool {
+		$classMatch = (get_class($employee) == $this->getClass());		 	
+		$rangMatch = (in_array($employee->getRang(), $this->getRang()));
+		$leaderMatch = (in_array($employee->isLeader(), $this->getLeader()));
+
+		if ($classMatch and $rangMatch and $leaderMatch) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public function filterEmployees(array $employees): array {
+		$filteredEmployees = [];
+		foreach ($employees as $employee) {
+			if ($this->match($employee)) {
+				$filteredEmployees[] = $employee;
+			}
+		}
+		return $filteredEmployees;
 	}
 }
 
@@ -202,22 +224,6 @@ class Department {
 	public function getEmployees(): array {
 		return $this->employees;
 	}
-
-	public function getAllCertainSpecialists(EmployeeSelector $employeeSelector): array {
-		$employeeList = [];
-		foreach ($this->getEmployees() as $employee) {
-			$classMatch = (get_class($employee) == $employeeSelector->getClass());		 	
-			$rangMatch = (in_array($employee->getRang(), $employeeSelector->getRang()));
-			$leaderMatch = (in_array($employee->isLeader(), $employeeSelector->getLeader()));
-
-			if ($classMatch and $rangMatch and $leaderMatch) {
-				$employeeList[] = $employee;
-				
-			}
-		}
-		return $employeeList;
-	}
-
 
 
 	public function getLeader(): Employee {
@@ -544,7 +550,8 @@ class AntiCrisis {
 
 	private function prepareEngineersForFire(Department $dep) {
 		$employeeSelector = new EmployeeSelector('Engineer', [1, 2, 3], [true, false]);
-		$engineersList = $dep->getAllCertainSpecialists($employeeSelector);
+		
+		$engineersList = $employeeSelector->filterEmployees($dep->getEmployees());
 		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
 
 		//sorting employees by rang;
@@ -621,38 +628,35 @@ class AntiCrisis {
 		$this->organisation->setTitle("после антикризисных мер #2"); 
 	}
 
-	public function preparePromoteListOfManagersInDepartment(Department $dep, array $rangs) {
-
-			$employeeSelector = new EmployeeSelector('Manager', array(1, 2, 3), array(true, false));
-			$managersList = $dep->getAllCertainSpecialists($employeeSelector);
-			$totalAvailableToPromote = 0;
-			$managersOfSertainRangs = [];
-			foreach ($managersList as $manager) {
-				$currentRang = $manager->getRang();
-				if (in_array($currentRang, $rangs)) {
-					$totalAvailableToPromote++;
-					$managersOfSertainRangs[$currentRang][] = $manager;
-				}
+	public function preparePromoteListOfManagersInDepartment(Department $dep, array $rangs) {		
+		$employeeSelector = new EmployeeSelector('Manager', array(1, 2, 3), array(true, false));
+		
+		$managersList = $employeeSelector->filterEmployees($dep->getEmployees);
+		$totalAvailableToPromote = 0;
+		$managersOfSertainRangs = [];
+		foreach ($managersList as $manager) {
+			$currentRang = $manager->getRang();
+			if (in_array($currentRang, $rangs)) {
+				$totalAvailableToPromote++;
+				$managersOfSertainRangs[$currentRang][] = $manager;
 			}
-			$promotionList = [];
-			foreach ($managersOfSertainRangs as $currentRangManagers) {
-				$thisRangToPromote = count($currentRangManagers);
-				$neededToPromote = ceil(0.5 * ($thisRangToPromote));
+		}
+		$promotionList = [];
+		foreach ($managersOfSertainRangs as $currentRangManagers) {
+			$thisRangToPromote = count($currentRangManagers);
+			$neededToPromote = ceil(0.5 * ($thisRangToPromote));
 
-				for ($i = 0; $i < $neededToPromote; $i++) {
-					$promotionList[] = $currentRangManagers[$i];
-				}
+			for ($i = 0; $i < $neededToPromote; $i++) {
+				$currentRangManagers[$i]->upRang();
 			}
-			return $promotionList;
-
-
+		}
 	}
 
 	public function thirdAntiCrisisMethod() { //promote 50% of department managers
 		$rangsToPromote = array(1, 2);
 		foreach ($this->organisation->getDepartments() as $dep) {
-			$promotionList = $this->preparePromoteListOfManagersInDepartment($dep, $rangsToPromote);
-			$dep->promoteStuff($promotionList);
+			$this->preparePromoteListOfManagersInDepartment($dep, $rangsToPromote);
+
 		}
 		$this->organisation->setTitle("после антикризисных мер #3"); 
 	}
