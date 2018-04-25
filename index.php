@@ -15,10 +15,6 @@ class Dbg {
 		print_r($var);
 		exit;
 	}
-
-	static public function exceptionEcho(Exception $e) {
-		echo 'Выброшено исключение: ',  $e->getMessage(), "\n";
-	}
 }
 
 class Reporter {
@@ -49,10 +45,10 @@ class Organisation {
 		$this->title = $title;
 	}
 
-	public function getTitle() {
+	public function getTitle(): string {
 		return $this->title;
 	}
-	public function getName() {
+	public function getName(): string {
 		return $this->name;
 	}
 
@@ -187,7 +183,7 @@ class Department {
 		$this->name = $name;
 	}
 
-	public function getName() {
+	public function getName(): string {
 		return $this->name;
 	}
 
@@ -213,14 +209,6 @@ class Department {
 		foreach($this->getEmployees() as $number => $employee) {
 			if (in_array($employee, $fireList)) {
 				unset($this->employees[$number]);
-			}
-		}
-	}
-
-	public function promoteStuff(array $promotionList) {
-		foreach($this->getEmployees() as $employee) {
-			if (in_array($employee, $promotionList)) {
-				$employee->upRang();
 			}
 		}
 	}
@@ -424,15 +412,15 @@ abstract class Employee {
 		return $papers;
 	}
 
-	public function getRang() {
+	public function getRang(): int {
 		return $this->rang;
 	}
 
-	public function isLeader() {
+	public function isLeader(): bool {
 		return $this->leader;
 	}
 
-	public function getName() {
+	public function getName(): string {
 		return $this->name;
 	}
 }
@@ -483,65 +471,49 @@ class PeopleFactory {
 }
 
 class OrganisationBuilder {
-	private $org;
 
 	public function createDefaultVector() {
-		$this->org = new Organisation('Вектор', 'ванильный');
+		$org = new Organisation('Вектор', 'ванильный');
 		
-		try {
-			// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
-			$department1 = new Department('Закупок');
+		// Департамент закупок: 9×ме1, 3×ме2, 2×ме3, 2×ма1 + руководитель департамента ме2
+		$department1 = new Department('Закупок');
 
-			$department1->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
-			$department1->addEmployees(PeopleFactory::create('Manager', 2, false, 3));						
-			$department1->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
-			$department1->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
-			$department1->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
-			$this->org->addDepartment($department1);			
-		} catch (Exception $e) {
-			Dbg::exceptionEcho($e);
-		}
+		$department1->addEmployees(PeopleFactory::create('Manager', 1, false, 9));
+		$department1->addEmployees(PeopleFactory::create('Manager', 2, false, 3));						
+		$department1->addEmployees(PeopleFactory::create('Manager', 3, false, 2));
+		$department1->addEmployees(PeopleFactory::create('Marketer', 1, false, 2));
+		$department1->addEmployees(PeopleFactory::create('Manager', 2, true, 1));		
+		$org->addDepartment($department1);			
 
-		try {
-			// Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
-			$department2 = new Department('Продаж');		
-			$department2->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
-			$department2->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
-			$department2->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
-			$department2->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
-			$department2->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
-			$this->org->addDepartment($department2);
-		} catch (Exception $e) {
-			Dbg::exceptionEcho($e);
-		}
+		// Департамент продаж: 12×ме1, 6×ма1, 3×ан1, 2×ан2 + руководитель ма2
+		$department2 = new Department('Продаж');		
+		$department2->addEmployees(PeopleFactory::create('Manager', 1, false, 12));
+		$department2->addEmployees(PeopleFactory::create('Marketer', 1, false, 6));
+		$department2->addEmployees(PeopleFactory::create('Analyst', 1, false, 3));
+		$department2->addEmployees(PeopleFactory::create('Analyst', 2, false, 2));
+		$department2->addEmployees(PeopleFactory::create('Marketer', 2, true, 1));
+		$org->addDepartment($department2);
 
-		try {
-			// Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
-			$department3 = new Department('Рекламы');		
-			$department3->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
-			$department3->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
-			$department3->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
-			$department3->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
-			$department3->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
-			$this->org->addDepartment($department3);
 
-		} catch (Exception $e) {
-			Dbg::exceptionEcho($e);
-		}
+		// Департамент рекламы: 15×ма1, 10×ма2, 8×ме1, 2×ин1 + руководитель ма3
+		$department3 = new Department('Рекламы');		
+		$department3->addEmployees(PeopleFactory::create('Marketer', 1, false, 15));
+		$department3->addEmployees(PeopleFactory::create('Marketer', 2, false, 10));
+		$department3->addEmployees(PeopleFactory::create('Manager', 1, false, 8));
+		$department3->addEmployees(PeopleFactory::create('Engineer', 1, false, 2));
+		$department3->addEmployees(PeopleFactory::create('Marketer', 3, true, 1));
+		$org->addDepartment($department3);
 
-		try {
-			// Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
-			$department4 = new Department('Логистики');		
-			$department4->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
-			$department4->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
-			$department4->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
-			$department4->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
-			$this->org->addDepartment($department4);
-		} catch (Exception $e) {
-			Dbg::exceptionEcho($e);
-		}
 
-		return $this->org;
+		// Департамент логистики: 13×ме1, 5×ме2, 5×ин1 + руководитель ме1
+		$department4 = new Department('Логистики');		
+		$department4->addEmployees(PeopleFactory::create('Manager', 1, false, 13));
+		$department4->addEmployees(PeopleFactory::create('Manager', 2, false, 5));
+		$department4->addEmployees(PeopleFactory::create('Engineer', 1, false, 5));
+		$department4->addEmployees(PeopleFactory::create('Manager', 1, true, 1));
+		$org->addDepartment($department4);
+
+		return $org;
 	}
 }
 
@@ -601,7 +573,7 @@ class AntiCrisis {
 		}
 	}
 
-	private function getTopAnalyst(array $employees) {
+	private function getTopAnalyst(array $employees): ?Analyst {
 		$topAnalyst = null;
 		$topRang = 0;
 		foreach ($employees as $employee) {
