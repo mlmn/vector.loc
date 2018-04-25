@@ -4,6 +4,10 @@
 mb_internal_encoding('utf-8');
 error_reporting(-1);
 
+function hsc($string) {
+	return htmlspecialchars($string, ENT_HTML5);
+}
+
 class Dbg {
 	static public function cd($var) {
 		echo "<pre>";
@@ -631,7 +635,7 @@ class AntiCrisis {
 	public function preparePromoteListOfManagersInDepartment(Department $dep, array $rangs) {		
 		$employeeSelector = new EmployeeSelector('Manager', array(1, 2, 3), array(true, false));
 		
-		$managersList = $employeeSelector->filterEmployees($dep->getEmployees);
+		$managersList = $employeeSelector->filterEmployees($dep->getEmployees());
 		$totalAvailableToPromote = 0;
 		$managersOfSertainRangs = [];
 		foreach ($managersList as $manager) {

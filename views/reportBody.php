@@ -1,6 +1,6 @@
 <div class="container">
 <div class="well">
-	<h4><?=$org->getName() . " " . $org->getTitle()?></h4>
+	<h4><?=hsc($org->getName() . " " . $org->getTitle())?></h4>
 	<table class="table">
 		<thead>
 			<tr>
@@ -16,13 +16,13 @@
 		<tbody>
 			<? foreach ($org->getDepartments() as $dep) { ?>
 				<tr>
-					<td><?=$dep->getName()?></td>
-					<td><?=$dep->countDepEmployees()?></td>
-					<td><?=round($dep->countAveregeEmployeeRang(), 3)?></td>
-					<td><?=$dep->countDepSalary()?></td>
-					<td><?=$dep->countDepCoffe()?></td>
-					<td><?=$dep->countDepPapers()?></td>
-					<td><?=round($dep->countDepPageCost(), 3)?></td>
+					<td><?=hsc($dep->getName())?></td>
+					<td><?=hsc($dep->countDepEmployees())?></td>
+					<td><?=hsc(round($dep->countAveregeEmployeeRang(), 3))?></td>
+					<td><?=hsc($dep->countDepSalary())?></td>
+					<td><?=hsc($dep->countDepCoffe())?></td>
+					<td><?=hsc($dep->countDepPapers())?></td>
+					<td><?=hsc(round($dep->countDepPageCost(), 3))?></td>
 				</tr>
 			<? } ?>
 		
@@ -30,22 +30,22 @@
 				
 			<tr>
 				<td>Средне</td>
-				<td><?=$org->getAvgEmployees()?></td>
+				<td><?=hsc($org->getAvgEmployees())?></td>
 				<td>..</td>
-				<td><?=$org->getAvgSalary()?></td>
-				<td><?=$org->getAvgCoffe()?></td>
-				<td><?=$org->getAvgPapers()?></td>	
-				<td><?=round($org->getAvgPageCost(), 3)?></td>		
+				<td><?=hsc($org->getAvgSalary())?></td>
+				<td><?=hsc($org->getAvgCoffe())?></td>
+				<td><?=hsc($org->getAvgPapers())?></td>	
+				<td><?=hsc(round($org->getAvgPageCost(), 3))?></td>		
 			</tr>
 
 			<tr>
 				<td>Всего</td>
-				<td><?=$org->getTotalEmployees()?></td>
+				<td><?=hsc($org->getTotalEmployees())?></td>
 				<td>..</td>
-				<td><?=$org->getTotalSalary()?></td>
-				<td><?=$org->getTotalCoffe()?></td>
-				<td><?=$org->getTotalPapers()?></td>
-				<td><?=round($org->getTotalPageCost(), 3)?></td>
+				<td><?=hsc($org->getTotalSalary())?></td>
+				<td><?=hsc($org->getTotalCoffe())?></td>
+				<td><?=hsc($org->getTotalPapers())?></td>
+				<td><?=hsc(round($org->getTotalPageCost(), 3))?></td>
 			</tr>
 
 		</tbody>
