@@ -9,9 +9,7 @@ function hsc($string) {
 }
 
 class Dbg {
-
 	private $switch;
-
 	private $timePoints = [];
 
 	public function __construct(bool $switch = true) {
@@ -75,6 +73,12 @@ class Organisation {
 	private $name;
 	private $title;
 	private $departments = [];
+
+	public function __clone() {
+		foreach ($this->departments as $number => $department) {
+			$this->departments[$number] = clone $department;
+		}
+	}
 
 	public function __construct(string $name, string $title) {
 		$this->name = $name;
@@ -218,10 +222,16 @@ class EmployeeSelector {
 class Department {
 
 	private $name;
-	private $employees = array();
+	private $employees = [];
 
 	public function __construct(string $name) {
 		$this->name = $name;
+	}
+
+	public function __clone() {
+		foreach ($this->employees as $number => $employee) {
+			$this->employees[$number] = clone $employee;
+		}
 	}
 
 	public function getName(): string {
@@ -659,8 +669,7 @@ class AntiCrisis {
 			}
 		}
 		foreach ($managersByRank as $currentRangManagers) {
-			$thisRangToPromote = count($currentRangManagers);
-			$neededToPromote = ceil(0.5 * ($thisRangToPromote));
+			$neededToPromote = ceil(0.5 * (count($currentRangManagers)));
 
 			for ($i = 0; $i < $neededToPromote; $i++) {
 				$currentRangManagers[$i]->upRang();
