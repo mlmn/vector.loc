@@ -9,12 +9,52 @@ function hsc($string) {
 }
 
 class Dbg {
+
+	private $switch;
+
+	private $timePoints = [];
+
+	public function __construct(bool $switch = true) {
+		$this->switch = $switch;
+		$this->timePoints['init'] = explode(" ", microtime());
+	}
+
+	public function setTimePoint(string $pointName) {
+		$this->timePoints[$pointName] = explode(" ", microtime());
+	}
+
+	public function benchMark(string $firstPoint, string $secondPoint) {
+		if ($this->switch == false) {
+			return;
+		}
+		if (in_array($firstPoint, array_keys($this->timePoints)) and in_array($secondPoint, array_keys($this->timePoints))) {
+			$seconds = $this->timePoints[$secondPoint][1] - $this->timePoints[$firstPoint][1];
+
+			$miliseconds = $this->timePoints[$secondPoint][0] - $this->timePoints[$firstPoint][0];
+			$timeMark = $seconds + $miliseconds;
+
+			if ($timeMark < 0.0005) {
+				$alertClass = "alert alert-success";
+			} elseif ($timeMark > 0.002) {
+				$alertClass = "alert alert-danger";
+			} else {
+				$alertClass = "alert alert-warning";
+			}
+
+			include 'views/benchmarkReport.php';
+		} else {
+			throw new Exception('Неверно задан промежуток');
+		}
+
+	}
+
 	static public function cd($var) {
 		echo "<pre>";
 		echo "\n";
 		print_r($var);
 		exit;
 	}
+
 }
 
 class Reporter {
@@ -135,7 +175,7 @@ class EmployeeSelector {
 	private $rang = [];
 	private $leader = [];
 
-	public function __construct(string $class, array $rang, array $leader) {
+	public function __construct(string $class, ?array $rang, ?array $leader) {
 		$this->class = $class;
 		$this->rang = $rang;
 		$this->leader = $leader;
@@ -143,17 +183,18 @@ class EmployeeSelector {
 	private function getClass(): string {
 		return $this->class;
 	}
-	private function getRang(): array {
+	private function getRang(): ?array {
 		return $this->rang;
 	}
-	private function getLeader(): array {
+	private function getLeader(): ?array {
 		return $this->leader;
 	}
 
 	public function match(Employee $employee): bool {
 		$classMatch = (get_class($employee) == $this->getClass());		 	
-		$rangMatch = (in_array($employee->getRang(), $this->getRang()));
-		$leaderMatch = (in_array($employee->isLeader(), $this->getLeader()));
+		$rangMatch = (($this->getRang() == null) or in_array($employee->getRang(), $this->getRang()));
+		//var_dump($this->getRang());
+		$leaderMatch = (($this->getLeader() == null) or in_array($employee->isLeader(), $this->getLeader()));
 
 		if ($classMatch and $rangMatch and $leaderMatch) {
 			return true;
@@ -525,7 +566,7 @@ class AntiCrisis {
 	}
 
 	private function prepareEngineersForFire(Department $dep) {
-		$employeeSelector = new EmployeeSelector('Engineer', [1, 2, 3], [true, false]);
+		$employeeSelector = new EmployeeSelector('Engineer', null, null);
 		
 		$engineersList = $employeeSelector->filterEmployees($dep->getEmployees());
 		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
@@ -605,20 +646,19 @@ class AntiCrisis {
 	}
 
 	public function preparePromoteListOfManagersInDepartment(Department $dep, array $rangs) {		
-		$employeeSelector = new EmployeeSelector('Manager', array(1, 2, 3), array(true, false));
+		$employeeSelector = new EmployeeSelector('Manager', null, null);
 		
 		$managersList = $employeeSelector->filterEmployees($dep->getEmployees());
 		$totalAvailableToPromote = 0;
-		$managersOfSertainRangs = [];
+		$managersByRank = [];
 		foreach ($managersList as $manager) {
 			$currentRang = $manager->getRang();
 			if (in_array($currentRang, $rangs)) {
 				$totalAvailableToPromote++;
-				$managersOfSertainRangs[$currentRang][] = $manager;
+				$managersByRank[$currentRang][] = $manager;
 			}
 		}
-		$promotionList = [];
-		foreach ($managersOfSertainRangs as $currentRangManagers) {
+		foreach ($managersByRank as $currentRangManagers) {
 			$thisRangToPromote = count($currentRangManagers);
 			$neededToPromote = ceil(0.5 * ($thisRangToPromote));
 
@@ -639,26 +679,41 @@ class AntiCrisis {
 
 }
 
+$debug = new Dbg(false);
+
 $builder = new OrganisationBuilder();
 $vectorVanilla = $builder->createDefaultVector();
-
 $reporter = new Reporter();
 $reporter->browsePageHeader();
 $reporter->browseCompanyReport($vectorVanilla);
+
+$debug->setTimePoint('vanillaFinish');
+$debug->benchMark('init', 'vanillaFinish');
 
 $vectorFirstAC = clone $vectorVanilla;
 $anti = new AntiCrisis($vectorFirstAC);
 $anti->firstAntiCrisisMethod();
 $reporter->browseCompanyReport($vectorFirstAC);
 
+$debug->setTimePoint('firstAntiCrisisFinish');
+$debug->benchMark('vanillaFinish', 'firstAntiCrisisFinish');
+
 $vectorSecondAC = clone $vectorVanilla;
 $anti = new AntiCrisis($vectorSecondAC);
 $anti->secondAntiCrisisMethod();
 $reporter->browseCompanyReport($vectorSecondAC);
 
+$debug->setTimePoint('secondAntiCrisisFinish');
+$debug->benchMark('firstAntiCrisisFinish', 'secondAntiCrisisFinish');
+
 $vectorThirdAC = clone $vectorVanilla;
 $anti = new AntiCrisis($vectorThirdAC);
 $anti->thirdAntiCrisisMethod();
 $reporter->browseCompanyReport($vectorThirdAC);
+
+$debug->setTimePoint('thirdAntiCrisisFinish');
+$debug->benchMark('secondAntiCrisisFinish', 'thirdAntiCrisisFinish');
+
+$debug->benchMark('init', 'thirdAntiCrisisFinish');
 
 $reporter->browsePageFooter();
