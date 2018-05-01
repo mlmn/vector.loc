@@ -1,6 +1,6 @@
 <div class="container">
 <div class="well">
-	<h4><?=hsc($org->getName() . " " . $org->getTitle())?></h4>
+	<h4><?=hsc($org->getName())?></h4>
 	<table class="table">
 		<thead>
 			<tr>

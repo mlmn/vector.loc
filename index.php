@@ -71,7 +71,6 @@ class Reporter {
 class Organisation {
 
 	private $name;
-	private $title;
 	private $departments = [];
 
 	public function __clone() {
@@ -85,13 +84,6 @@ class Organisation {
 		$this->title = $title;	
 	}
 
-	public function setTitle(string $title) {
-		$this->title = $title;
-	}
-
-	public function getTitle(): string {
-		return $this->title;
-	}
 	public function getName(): string {
 		return $this->name;
 	}
@@ -598,8 +590,6 @@ class AntiCrisis {
 			$fireList = $this->prepareEngineersForFire($dep);
 			$dep->fireStuff($fireList);
 		}
-
-		$this->organisation->setTitle("после антикризисных мер #1"); 
 	}
 
 	private function boostAnalystsInDepartment(Department $dep) {
@@ -640,7 +630,6 @@ class AntiCrisis {
 			$this->boostAnalystsInDepartment($dep);
 			$this->makeAnalystLeaderInDepartment($dep);
 		}
-		$this->organisation->setTitle("после антикризисных мер #2"); 
 	}
 
 	public function preparePromoteListOfManagersInDepartment(Department $dep, array $rangs) {		
@@ -669,9 +658,7 @@ class AntiCrisis {
 		$rangsToPromote = array(1, 2);
 		foreach ($this->organisation->getDepartments() as $dep) {
 			$this->preparePromoteListOfManagersInDepartment($dep, $rangsToPromote);
-
 		}
-		$this->organisation->setTitle("после антикризисных мер #3"); 
 	}
 
 }
