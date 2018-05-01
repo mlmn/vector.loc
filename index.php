@@ -29,11 +29,11 @@ class Dbg {
 			$seconds = $this->timePoints[$secondPoint][1] - $this->timePoints[$firstPoint][1];
 
 			$miliseconds = $this->timePoints[$secondPoint][0] - $this->timePoints[$firstPoint][0];
-			$timeMark = $seconds + $miliseconds;
+			$timeMark = 1000 * ($seconds + $miliseconds);
 
-			if ($timeMark < 0.0005) {
+			if ($timeMark < 1) {
 				$alertClass = "alert alert-success";
-			} elseif ($timeMark > 0.002) {
+			} elseif ($timeMark > 5) {
 				$alertClass = "alert alert-danger";
 			} else {
 				$alertClass = "alert alert-warning";
@@ -577,31 +577,19 @@ class AntiCrisis {
 
 	private function prepareEngineersForFire(Department $dep) {
 		$employeeSelector = new EmployeeSelector('Engineer', null, null);
-		
 		$engineersList = $employeeSelector->filterEmployees($dep->getEmployees());
 		$needToFire = (int)ceil(count($engineersList)*0.4); //fire 40% of staff round to bigger int
 
-		//sorting employees by rang;
 		usort($engineersList, function($a, $b) {
-			if ($a->getRang() == $b->getRang()) {
-				return 0;
-			}
-			return ($a->getRang() < $b->getRang()) ? -1 : 1;
+			$aWeight = ($a->isLeader() ? 100 : 0) + $a->getRang();
+			$bWeight = ($b->isLeader() ? 100 : 0) + $b->getRang();
+		 	if ($aWeight == $bWeight) {
+		 		return 0;
+		 	}
+		 	return ($aWeight < $bWeight) ? -1 : 1;
 		});
 
-		//then sorting by leader, because leader is always last to fire;
-		usort($engineersList, function($a, $b) {
-			if ($a->isLeader() == $b->isLeader()) {
-				return 0;
-			}
-			if ($a->isLeader() == false and $b->isLeader() == true) {
-				return -1;
-			} else {
-				return 1;
-			}
-		});
 		$fireList = array_slice($engineersList, 0, $needToFire);
-
 		return $fireList;
 	}
 
@@ -688,7 +676,7 @@ class AntiCrisis {
 
 }
 
-$debug = new Dbg(false);
+$debug = new Dbg(true);
 
 $builder = new OrganisationBuilder();
 $vectorVanilla = $builder->createDefaultVector();
